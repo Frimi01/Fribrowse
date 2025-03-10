@@ -1,0 +1,46 @@
+[
+  {
+    "name": "Example: (click me)",
+    "folders": [
+      {
+        "name": "Studies!",
+        "folders": [],
+        "bookmarks": [
+          {
+            "name": "Powerhouse of cell",
+            "url": "https://en.wikipedia.org/wiki/Mitochondrion"
+          },
+          {
+            "name": "Foods",
+            "url": "https://www.reddit.com/r/recipes/"
+          }
+        ],
+        "open": true
+      },
+      {
+        "name": "Awesome githubs!",
+        "folders": [],
+        "bookmarks": [
+          {
+            "name": "Frimi01",
+            "url": "https://github.com/Frimi01/Frimi01-Projects"
+          }
+        ],
+        "open": true
+      },
+      {
+        "name": "YouTube",
+        "folders": [],
+        "bookmarks": [
+          {
+            "name": "Youtube.com",
+            "url": "https://www.youtube.com/"
+          }
+        ],
+        "open": true
+      }
+    ],
+    "bookmarks": [],
+    "open": false
+  }
+]

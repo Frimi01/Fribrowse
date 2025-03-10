@@ -1,0 +1,177 @@
+/*  //Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
+    styles.css 
+*/
+
+/* === Theme Variables === */
+/* Light Mode */
+:root {
+  --primary-color: #4caf50;
+  --primary-hover: #45a049;
+  --background-color: white;
+  --text-color: black;
+  --border-color: #ccc;
+  --bg-light: #f4f4f4;
+  --text-light: gray;
+  --text-error: red;
+  --spacing-small: 10px;
+  --spacing-medium: 20px;
+  --font-family: Arial, sans-serif;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #2e7d32;
+    --primary-hover: #1b5e20;
+    --background-color: #121212;
+    --text-color: white;
+    --border-color: #444;
+    --bg-light: #1e1e1e;
+    --text-light: #bbb;
+    --text-error: #ff5555;
+  }
+}
+
+/* === Global Styles === */
+body {
+  font-family: var(--font-family);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  margin: 0;
+  display: flex;
+  height: 100vh;
+}
+/* === Layout === */
+.container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+/* === Sidebar === */
+.sidebar {
+  width: 250px;
+  min-width: 1px;
+  min-height: 100vh;
+  background: var(--bg-light);
+  padding: var(--spacing-small);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* === Resizer (Draggable Border) === */
+.resizer {
+  width: 5px;
+  background: var(--border-color);
+  cursor: ew-resize;
+  flex-shrink: 0;
+}
+
+/* === Main Content === */
+.main-content {
+  flex-grow: 1;
+  padding: var(--spacing-medium);
+  overflow-y: auto;
+}
+
+/* === Search Bar === */
+.search-bar {
+  display: flex;
+  gap: var(--spacing-small);
+  margin-bottom: var(--spacing-medium);
+}
+
+input[type="text"] {
+  padding: var(--spacing-small);
+  width: 100%;
+  background: var(--bg-light);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+/* === Buttons === */
+button {
+  padding: var(--spacing-small) var(--spacing-medium);
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* === Results === */
+.results {
+  margin-top: var(--spacing-medium);
+}
+
+.result-item {
+  margin-bottom: var(--spacing-small);
+  padding: var(--spacing-small);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.result-link {
+  font-size: 12px;
+  color: var(--text-light);
+  display: block;
+  margin: -15px 0 var(--spacing-small);
+}
+
+/* === Messages === */
+.error-message {
+  color: var(--text-error);
+  margin-bottom: var(--spacing-small);
+  text-align: center;
+}
+
+.loading-message {
+  color: var(--text-color);
+  margin-bottom: var(--spacing-small);
+  text-align: left;
+}
+
+/* === Folder & Bookmark System === */
+.folder {
+  cursor: pointer;
+  font-weight: bold;
+  position: relative;
+}
+
+.folder-content {
+  margin-left: none;
+  display: none;
+}
+
+.bookmark {
+  position: relative;
+}
+
+/* === Context Menu === */
+.context-menu {
+  display: none;
+  position: absolute;
+  background: var(--background-color);
+  border: 1px solid var(--border-color);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.context-menu button {
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--text-color);
+  padding: var(--spacing-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.context-menu button:hover {
+  background: var(--bg-light);
+}
