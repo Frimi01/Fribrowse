@@ -11,8 +11,9 @@ const app = express();
 const PORT = process.env.PORT;
 const SEARCH_ENGINE_ID = process.env.SEARCH_ENGINE_ID;
 const API_KEY = process.env.API_KEY;
+const BOOKMARK_PATH = "./bookmarks.json";
 
-app.use(express.json()); // Allows JSON in requests
+app.use(express.json());
 app.use(
   cors({
     origin: `http://localhost:${PORT}`,
@@ -27,7 +28,7 @@ app.post("/save-json", (req, res) => {
 
   const data = JSON.stringify(req.body, null, 2); // Format JSON
 
-  fs.writeFile("./bookmarks.json", data, (err) => {
+  fs.writeFile(BOOKMARK_PATH, data, (err) => {
     if (err) {
       console.error("Error saving bookmarks:", err);
       return res.status(500).json({ error: "Failed to save bookmarks" });
@@ -42,7 +43,7 @@ app.post("/save-json", (req, res) => {
 app.get("/get-bookmarks", (req, res) => {
   console.log("Received request for bookmarks");
 
-  fs.readFile("./bookmarks.json", "utf8", (err, data) => {
+  fs.readFile(BOOKMARK_PATH, "utf8", (err, data) => {
     if (err) {
       console.error("Error reading file:", err);
       return res.status(500).json({ error: "Failed to read bookmarks" });
@@ -64,12 +65,15 @@ const server = app.listen(PORT, () => {
 
 // Open browser depending on OS
 const url = `http://localhost:${PORT}/`;
-if (process.platform === "win32") {
-  exec(`start ${url}`); // Windows
-} else if (process.platform === "darwin") {
-  exec(`open ${url}`); // macOS
-} else if (process.platform === "linux") {
-  exec(`xdg-open ${url}`); // Linux
+if (process.env.NODE_ENV !== "test") {
+  const url = `http://localhost:${PORT}/`;
+  if (process.platform === "win32") {
+    exec(`start ${url}`);
+  } else if (process.platform === "darwin") {
+    exec(`open ${url}`);
+  } else if (process.platform === "linux") {
+    exec(`xdg-open ${url}`);
+  }
 }
 process.on("SIGINT", () => {
   console.log("Shutting down server...");
@@ -78,3 +82,5 @@ process.on("SIGINT", () => {
     process.exitCode = 0;
   });
 });
+
+module.exports = { app, server }; // Export the server instance
