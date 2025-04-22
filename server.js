@@ -26,7 +26,7 @@ app.use(express.static(process.cwd() + "/public")); //hosts files in public
 app.post("/save-json", (req, res) => {
   console.log("json save requested");
 
-  const data = JSON.stringify(req.body, null, 2); // Format JSON
+  const data = JSON.stringify(req.body, null, 2);
 
   fs.writeFile(BOOKMARK_PATH, data, (err) => {
     if (err) {
@@ -35,7 +35,7 @@ app.post("/save-json", (req, res) => {
     }
 
     console.log("Saved JSON successfully");
-    res.json({ message: "Bookmarks saved successfully!" }); // Send response
+    res.json({ message: "Bookmarks saved successfully!" });
   });
 });
 
