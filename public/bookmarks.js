@@ -4,7 +4,6 @@
 // Config:
 const PORT = 3000;
 
-//classes
 class BookmarkManager {
   constructor(port) {
     this.port = port;

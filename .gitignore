@@ -5,15 +5,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
   
-# Ignore system files (Mac & Windows)
+# Ignore system files
 .DS_Store
 Thumbs.db
   
-# Ignore build files (if applicable)
+# Ignore build files
 dist/
 build/
   
-# Ignore IDE/editor settings (optional)
+# Ignore IDE/editor settings
 .vscode/
 .idea/
 *.swp
