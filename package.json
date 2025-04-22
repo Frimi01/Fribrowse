@@ -24,6 +24,7 @@
     "express": "^4.21.2"
   },
   "devDependencies": {
+    "happy-dom": "^17.4.4",
     "nodemon": "^3.1.9",
     "supertest": "^7.1.0",
     "vitest": "^3.1.1"
