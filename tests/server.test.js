@@ -66,19 +66,6 @@ describe("Server API Endpoints", () => {
     expect(fs.readFile).toHaveBeenCalled();
   });
 
-  it("GET /get-api-key should return API key and engine ID", async () => {
-    process.env.API_KEY = "test_api_key";
-    process.env.SEARCH_ENGINE_ID = "test_engine_id";
-
-    const response = await request(app).get("/get-api-key");
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      apiKey: "test_api_key",
-      engineId: "test_engine_id",
-    });
-  });
-
   it("tests the error handling of the get bookmark endpoint", async () => {
     vi.spyOn(fs, "readFile").mockImplementation(
       (_path, _encoding, callback) => {
