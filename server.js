@@ -8,9 +8,7 @@ const { exec } = require("child_process"); //to open browser
 
 //config
 const app = express();
-const PORT = process.env.PORT;
-const SEARCH_ENGINE_ID = process.env.SEARCH_ENGINE_ID;
-const API_KEY = process.env.API_KEY;
+const PORT = 3002;
 const BOOKMARK_PATH = "./bookmarks.json";
 
 app.use(express.json());
@@ -53,18 +51,11 @@ app.get("/get-bookmarks", (req, res) => {
   });
 });
 
-// Sends API key to frontend
-app.get("/get-api-key", (req, res) => {
-  res.json({ apiKey: API_KEY, engineId: SEARCH_ENGINE_ID });
-  console.log("sent .env");
-});
-
 const server = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
 // Open browser depending on OS
-const url = `http://localhost:${PORT}/`;
 if (process.env.NODE_ENV !== "test") {
   const url = `http://localhost:${PORT}/`;
   if (process.platform === "win32") {

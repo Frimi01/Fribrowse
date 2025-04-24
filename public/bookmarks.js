@@ -2,7 +2,7 @@
 //BOOKMARK LOGIC:
 
 // Config:
-const PORT = 3000;
+const PORT = 3002;
 
 class BookmarkManager {
   constructor(port) {
