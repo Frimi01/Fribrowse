@@ -1,37 +1,18 @@
-This is FriBrowse, a minimalistic website for searching and storing bookmarks!
+This is FriBrowse, a minimalistic website meant to serve as a conventient hub for searching the internet and doing research!
 
-# Plans:
+# 🚧 Plans
 
-1. ~~Add subfolders to bookmark manager.~~
-2. ~~Drag and drop bookmarks.~~
-3. Move off google api.
-4. ~~Remake the look while keeping the minimalistic theme.~~
-5. Custom background and themes
-6. ~~Moved to it's own repo~~
+1. Refit the functionality of V1.0 to follow new goals.
 
-# Questions and Answers
+# ❓ Questions and Answers
 
-**1. How to use with google search api.**
+1. What happened to the searching feature?
 
-(probably isn't needed for the bookmark part of things.. probably)
-
-This program currently looks for a .env file in the same folder as the exported .exe file. Simply make a file with the name .env (nothing before the ".") and enter the following information:
-
-```.env
-API_KEY = # your api key
-
-SEARCH_ENGINE_ID = # your search engine id
-
-PORT = # your desired port (To actually work with something other than 3000 you'll have to change the const at the top of bookmanager.js too)
-```
-
-Make a API_KEY and SEARCH_ENGINE_ID on https://console.cloud.google.com with google custom search api
-
-Google documentation can seem confusing it's actually quite simple.
+It's still available in the FribrowseV1.0 branch and may be included in future releases. While the focus of this project has shifted from purely research and note-taking to focus on better received more general-purpose features, the search bar was a useful workflow tool. That version will remain accessible and may continue to receive updates.
 
 **2. What is this project about?**
 
-This project is designed to create a minimalistic yet practical and customizable browsing experience. So far mostly in how you interact with bookmarks and the searchbar. Optimal for people who want a safe and transportable list of research materials.
+This project is designed to create a minimalistic yet practical and customizable browsing experience. So far mostly in how you interact with bookmarks. It's designed for users who want a safe, and focuses to remain a portable way to organize and access research materials.
 
 **3. How can I contribute?**
 
@@ -39,20 +20,21 @@ Feel free to open an issue or submit a pull request! I'm happy to consider impro
 
 **4. I found a bug. What should I do?**
 
-Please create an issue with a description of the problem. Be sure to include any relevant details, like error messages or steps to reproduce the issue.
+Please create an issue describing the problem. Include any relevant details such as error messages, screenshots, or steps to reproduce the bug.
 
 **5. How to download for use?**
 
-I currently don't have a way to just download a finished build. You can either build it yourself (by cloning the repo and packaging it) or ask me to upload it.
+Official Windows releases are available via the GitHub Releases tab. For other platforms or the latest changes, clone the repo and build it manually.
 
 **6. How do I use this?**
 
-It's quite intuative! for the bookmarks just add folders, right click on folders and bookmarks for options, and drag stuff around as you want. To add a url you can use the search functiona and just copy the url provided all in one place.
+It's pretty intuitive:
+
+- Add folders for organizing bookmarks.
+- Right-click folders/bookmarks for options.
+- Drag and drop to rearrange.
+- To add a URL, just copy it from your browser and place it where you want.
 
 **7. Can the website be used without a backend?**
 
-You can replace the code calling the backend with localstorage. Beware that refreshing the catche like this will delete the bookmarks, so export some backups.
-
-**8. Will the program actually move off google's api?**
-
-I really wish it, but I've encountered issues with getting the same user experience without adding too much cost. I have some creative solutions in mind but I don't think I'll work on it immediately. If you can help or have a good idea I'd appreciate the support.
+You can replace the code calling the backend with localstorage. Beware that refreshing the catche like this will delete the bookmarks, so make sure to export backups regularly.
