@@ -34,7 +34,3 @@ It's pretty intuitive:
 - Right-click folders/bookmarks for options.
 - Drag and drop to rearrange.
 - To add a URL, just copy it from your browser and place it where you want.
-
-**7. Can the website be used without a backend?**
-
-You can replace the code calling the backend with localstorage. Beware that refreshing the catche like this will delete the bookmarks, so make sure to export backups regularly.
