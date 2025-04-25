@@ -1,28 +1,35 @@
-<!--Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
-    FriBrowse.html -->
-<!DOCTYPE html>
+<!--Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects -->
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>🔍FriBrowse</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <div class="container">
       <!-- Bookmark Manager -->
       <div class="main-content">
         <h2>Bookmarks</h2>
         <div class="bookmark-buttons">
           <button onclick="exportBookmarks()">Export</button>
-          <input type="file" id="importFile" onchange="importBookmarks(event)" hidden>
-          <button onclick="document.getElementById('importFile').click()">Import</button>    
+          <input
+            type="file"
+            id="importFile"
+            onchange="importBookmarks(event)"
+            hidden
+          />
+          <button onclick="document.getElementById('importFile').click()">
+            Import
+          </button>
         </div>
         <ul id="bookmarkTree"></ul>
         <button onclick="addFolder()">Add Folder</button>
       </div>
 
-    <div id="contextMenu" class="context-menu"></div>
+      <div id="contextMenu" class="context-menu"></div>
 
-    <script src="bookmarks.js"></script>
-    <script src="index.js"></script>
-</body>
+      <script src="bookmarks.js"></script>
+      <script src="index.js"></script>
+    </div>
+  </body>
 </html>
