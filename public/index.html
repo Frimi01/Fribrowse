@@ -9,9 +9,9 @@
 <body>
     <div class="container">
       <!-- Bookmark Manager -->
-      <div class="sidebar">
+      <div class="main-content">
         <h2>Bookmarks</h2>
-        <div class="sidebar-buttons">
+        <div class="bookmark-buttons">
           <button onclick="exportBookmarks()">Export</button>
           <input type="file" id="importFile" onchange="importBookmarks(event)" hidden>
           <button onclick="document.getElementById('importFile').click()">Import</button>    
@@ -20,16 +20,6 @@
         <button onclick="addFolder()">Add Folder</button>
       </div>
 
-      <div class="resizer" id="resizer"></div>
-
-      <div class="main-content">
-        <form id="searchForm" class="search-bar">
-            <input type="text" name="q" placeholder="Search..">
-            <button type="submit">Submit</button>
-        </form>
-      <div id="results" class="results"></div>
-    </div>
-    
     <div id="contextMenu" class="context-menu"></div>
 
     <script src="bookmarks.js"></script>
