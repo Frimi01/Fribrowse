@@ -1,7 +1,6 @@
 /*  //Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
     styles.css 
 */
-
 /* === Theme Variables === */
 /* Light Mode */
 :root {
@@ -38,42 +37,56 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   margin: 0;
-  display: flex;
   height: 100vh;
 }
-/* === Layout === */
 
-/* === Resizer (Draggable Border) can be removed
-.resizer {
-  width: 5px;
-  background: var(--border-color);
-  cursor: ew-resize;
-  flex-shrink: 0;
-}=== */
+/* === Layout === */
 
 /* === Main Content === */
 .main-content {
-  flex-grow: 1;
   padding: var(--spacing-medium);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
-/* === Search Bar === */
-.search-bar {
+/* === Header Bar === */
+.header-bar {
+  background-color: var(--border-color);
+  padding: var(--spacing-medium);
+  margin-bottom: var(--spacing-medium);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 8px 8px 0 0;
+}
+
+.header-bar h1 {
+  color: var(--text-color);
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.header-bar .bookmark-buttons {
   display: flex;
   gap: var(--spacing-small);
-  margin-bottom: var(--spacing-medium);
+  margin: 0;
 }
 
-input[type="text"] {
-  padding: var(--spacing-small);
-  width: 100%;
-  background: var(--bg-light);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
+.header-bar .bookmark-buttons button {
+  padding: var(--spacing-small) var(--spacing-medium);
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
 }
 
-/* === Buttons === */
+.header-bar .bookmark-buttons button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* === Buttons (General) === */
 button {
   padding: var(--spacing-small) var(--spacing-medium);
   background-color: var(--primary-color);
@@ -84,19 +97,6 @@ button {
 
 button:hover {
   background-color: var(--primary-hover);
-}
-
-/* === Messages === */
-.error-message {
-  color: var(--text-error);
-  margin-bottom: var(--spacing-small);
-  text-align: center;
-}
-
-.loading-message {
-  color: var(--text-color);
-  margin-bottom: var(--spacing-small);
-  text-align: left;
 }
 
 /* === Folder & Bookmark System === */
@@ -138,4 +138,53 @@ button:hover {
 
 .context-menu button:hover {
   background: var(--bg-light);
+}
+
+/* === Bookmark Tree === */
+#bookmarkTree {
+  list-style: none;
+  padding: 0;
+}
+
+#bookmarkTree li {
+  margin-bottom: 5px;
+  padding-left: var(--spacing-medium);
+}
+
+#bookmarkTree li a {
+  color: var(--text-color);
+  text-decoration: none;
+  display: block;
+  padding: 5px 0;
+}
+
+#bookmarkTree li a:hover {
+  background-color: var(--bg-light);
+}
+
+#bookmarkTree ul {
+  list-style: none;
+  padding-left: var(--spacing-medium);
+}
+
+#bookmarkTree .folder-item {
+  font-weight: bold;
+  color: inherit;
+}
+
+/* === Add Folder Button === */
+.add-folder-button {
+  padding: var(--spacing-small) var(--spacing-medium);
+  background-color: var(--bg-light);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+  margin-top: var(--spacing-medium);
+}
+
+.add-folder-button:hover {
+  background-color: #ddd;
 }
