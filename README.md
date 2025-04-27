@@ -1,9 +1,9 @@
-This is FriBrowse, a minimalistic website meant to serve as a conventient hub for searching the internet and doing research!
+This is FriBrowse, a minimalistic website meant to serve as a convenient hub for searching the internet and doing research!
 
 # 🚧 Plans
 
 1. Refit the functionality of V1.0 to follow new goals.
-2. Add select root drag and drop feature to add possibility of workplace enviroment configurations.
+2. Add select root drag and drop feature to add possibility of workplace environment configurations.
 
 # ❓ Questions and Answers
 
