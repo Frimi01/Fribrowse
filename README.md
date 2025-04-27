@@ -3,6 +3,7 @@ This is FriBrowse, a minimalistic website meant to serve as a conventient hub fo
 # 🚧 Plans
 
 1. Refit the functionality of V1.0 to follow new goals.
+2. Add select root drag and drop feature to add possibility of workplace enviroment configurations.
 
 # ❓ Questions and Answers
 
