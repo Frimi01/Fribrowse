@@ -114,7 +114,7 @@ function renderTree() {
 
         bookmarkLink.href = bookmark.url;
         bookmarkLink.target = "_blank";
-        bookmarkLink.textContent = bookmark.name;
+        bookmarkLink.textContent = `🔗 ${bookmark.name}`;
 
         bookmarkElement.classList.add("bookmark");
         bookmarkElement.appendChild(bookmarkLink);
