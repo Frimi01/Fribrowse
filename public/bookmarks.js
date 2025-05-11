@@ -33,7 +33,7 @@ class BookmarkManager {
       this.bookmarks = [];
     }
   }
-  async saveBookmarks() {
+  async saveBookmarksToServer() {
     try {
       await fetch(`http://localhost:${this.port}/save-json`, {
         method: "POST",
@@ -43,32 +43,6 @@ class BookmarkManager {
       console.log("Bookmarks saved successfully!");
     } catch (error) {
       console.error("Failed to save bookmarks:", error);
-    }
-  }
-
-  // Function to find a folder by index path
-
-  getFolderByPath(folderPath) {
-    let folder = { folders: this.bookmarks };
-    for (let index of folderPath) {
-      if (!folder.folders || !folder.folders[index]) {
-        return null;
-      }
-      folder = folder.folders[index]; // Move into the subfolder
-    }
-    return folder;
-  }
-
-  updateBookmark(property, folderPath, bookmarkIndex) {
-    const folder = this.getFolderByPath(folderPath);
-    if (!folder || !folder.bookmarks[bookmarkIndex]) {
-      return console.error("Error: Bookmark not found.");
-    }
-    const currentValue = folder.bookmarks[bookmarkIndex][property];
-    const newValue = prompt(`Enter new bookmark ${property}:`, currentValue);
-    if (newValue !== null && newValue !== "") {
-      folder.bookmarks[bookmarkIndex][property] = newValue;
-      saveAndRender();
     }
   }
 }
@@ -182,17 +156,15 @@ function moveFolder(sourcePath, targetPath) {
     return;
   }
 
-  let sourceFolder = bookmarkManager.getFolderByPath(sourcePath);
+  let sourceFolder = getFolderByPath(sourcePath);
   if (!sourceFolder) return;
 
-  let targetFolder = bookmarkManager.getFolderByPath(targetPath);
+  let targetFolder = getFolderByPath(targetPath);
   if (!targetFolder || !targetFolder.folders) return;
 
   // Remove from source
   let index = sourcePath[sourcePath.length - 1];
-  bookmarkManager
-    .getFolderByPath(sourcePath.slice(0, -1))
-    .folders.splice(index, 1);
+  getFolderByPath(sourcePath.slice(0, -1)).folders.splice(index, 1);
 
   // Add to target
   targetFolder.folders.push(sourceFolder);
@@ -200,12 +172,12 @@ function moveFolder(sourcePath, targetPath) {
 }
 
 function moveBookmark(sourceFolderPath, bookmarkIndex, targetFolderPath) {
-  let sourceFolder = bookmarkManager.getFolderByPath(sourceFolderPath);
+  let sourceFolder = getFolderByPath(sourceFolderPath);
   if (!sourceFolder || !sourceFolder.bookmarks) return;
 
   let bookmark = sourceFolder.bookmarks.splice(bookmarkIndex, 1)[0];
 
-  let targetFolder = bookmarkManager.getFolderByPath(targetFolderPath);
+  let targetFolder = getFolderByPath(targetFolderPath);
   if (!targetFolder || !targetFolder.bookmarks) return;
 
   targetFolder.bookmarks.push(bookmark);
@@ -301,7 +273,7 @@ function addSubFolder(folderPath) {
   const name = prompt("Enter folder name:");
   if (!name) return;
 
-  let targetFolder = bookmarkManager.getFolderByPath(folderPath);
+  let targetFolder = getFolderByPath(folderPath);
   if (!targetFolder || !targetFolder.folders) {
     console.error("Target folder not found.");
     return;
@@ -312,7 +284,7 @@ function addSubFolder(folderPath) {
 }
 
 function renameFolder(folderPath) {
-  let folder = bookmarkManager.getFolderByPath(folderPath);
+  let folder = getFolderByPath(folderPath);
   if (!folder) return console.error("Error: Folder not found.");
 
   const name = prompt("Enter new folder name:", folder.name);
@@ -327,7 +299,7 @@ function addBookmark(folderPath) {
   const url = prompt("Enter bookmark URL:");
   if (!name || !url) return;
 
-  const targetFolder = bookmarkManager.getFolderByPath(folderPath);
+  const targetFolder = getFolderByPath(folderPath);
   if (!targetFolder || !targetFolder.bookmarks) {
     console.error("Error: Could not find target folder!");
     return;
@@ -338,20 +310,32 @@ function addBookmark(folderPath) {
 }
 
 function renameBookmark(folderPath, bookmarkIndex) {
-  bookmarkManager.updateBookmark("name", folderPath, bookmarkIndex);
+  updateBookmark("name", folderPath, bookmarkIndex);
 }
 
 function editBookmarkUrl(folderPath, bookmarkIndex) {
-  bookmarkManager.updateBookmark("url", folderPath, bookmarkIndex);
+  updateBookmark("url", folderPath, bookmarkIndex);
 }
 
+function updateBookmark(property, folderPath, bookmarkIndex) {
+  const folder = getFolderByPath(folderPath);
+  if (!folder || !folder.bookmarks[bookmarkIndex]) {
+    return console.error("Error: Bookmark not found.");
+  }
+  const currentValue = folder.bookmarks[bookmarkIndex][property];
+  const newValue = prompt(`Enter new bookmark ${property}:`, currentValue);
+  if (newValue !== null && newValue !== "") {
+    folder.bookmarks[bookmarkIndex][property] = newValue;
+    saveAndRender();
+  }
+}
 function deleteFolder(folderPath) {
   if (!confirm("Are you sure you want to delete this folder?")) return;
 
   let parentPath = [...folderPath];
   let folderIndex = parentPath.pop(); // Get the last index (folder to delete)
 
-  let parentFolder = bookmarkManager.getFolderByPath(parentPath);
+  let parentFolder = getFolderByPath(parentPath);
 
   if (parentFolder) {
     parentFolder.folders.splice(folderIndex, 1); // Remove the folder from its parent's list
@@ -365,7 +349,7 @@ function deleteFolder(folderPath) {
 function deleteBookmark(folderPath, bookmarkIndex) {
   if (!confirm("Are you sure you want to delete this bookmark?")) return;
 
-  const folder = bookmarkManager.getFolderByPath(folderPath);
+  const folder = getFolderByPath(folderPath);
   if (!folder || !folder.bookmarks[bookmarkIndex])
     return console.error("Error: Bookmark not found.");
 
@@ -375,7 +359,7 @@ function deleteBookmark(folderPath, bookmarkIndex) {
 
 // Opens and closes the folder:
 function toggleFolder(folderPath) {
-  const folder = bookmarkManager.getFolderByPath(folderPath);
+  const folder = getFolderByPath(folderPath);
   if (!folder) return console.error("Folder not found:", folderPath);
 
   folder.open = !folder.open;
@@ -384,8 +368,20 @@ function toggleFolder(folderPath) {
 
 // Saves and renders the bookmarks (so I don't forget one when adding the other)
 async function saveAndRender() {
-  await bookmarkManager.saveBookmarks();
+  await bookmarkManager.saveBookmarksToServer();
   renderTree.render();
+}
+
+// Function to find a folder by index path
+function getFolderByPath(folderPath) {
+  let folder = { folders: bookmarkManager.bookmarks };
+  for (let index of folderPath) {
+    if (!folder.folders || !folder.folders[index]) {
+      return null;
+    }
+    folder = folder.folders[index]; // Move into the subfolder
+  }
+  return folder;
 }
 
 const bookmarkManager = new BookmarkManager(PORT);
