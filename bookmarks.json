@@ -40,7 +40,12 @@
         "open": true
       }
     ],
-    "bookmarks": [],
+    "bookmarks": [
+      {
+        "name": "background image",
+        "url": "https://pixabay.com/photos/colorful-painting-background-2468874/"
+      }
+    ],
     "open": true
   }
 ]
