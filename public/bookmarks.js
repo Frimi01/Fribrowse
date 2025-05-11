@@ -23,7 +23,10 @@ class BookmarkManager {
       if (!response.ok) throw new Error("Failed to fetch bookmarks");
 
       this.bookmarks = await response.json();
-      renderTree();
+      if (!renderTree) {
+        renderTree = createBookmarksRenderer(treeRoot, this.bookmarks);
+      }
+      renderTree.render();
       console.log("Bookmarks loaded sucsessfully!");
     } catch (error) {
       console.error("Error loading bookmarks:", error);
@@ -71,11 +74,36 @@ class BookmarkManager {
 }
 
 // render logic
-function renderTree() {
-  const tree = document.getElementById("bookmarkTree");
-  tree.innerHTML = "";
+function createBookmarksRenderer(rootElement, bookmarks) {
+  function render() {
+    rootElement.innerHTML = "";
+
+    bookmarks.forEach((folder, index) => {
+      renderFolder(folder, [index], rootElement);
+    });
+  }
 
   function renderFolder(folder, folderPath, parentElement) {
+    const folderElement = createFolderElement(folder, folderPath);
+
+    const folderContent = document.createElement("ul");
+    folderContent.className = "folder-content";
+    folderContent.style.display = folder.open ? "block" : "none";
+
+    folder.folders?.forEach((subFolder, fIndex) => {
+      renderFolder(subFolder, [...folderPath, fIndex], folderContent);
+    });
+
+    folder.bookmarks?.forEach((bookmark, bIndex) => {
+      const bookmarkEl = createBookmarkElement(bookmark, folderPath, bIndex);
+      folderContent.appendChild(bookmarkEl);
+    });
+
+    folderElement.appendChild(folderContent);
+    parentElement.appendChild(folderElement);
+  }
+
+  function createFolderElement(folder, folderPath) {
     const folderElement = document.createElement("li");
 
     const folderName = document.createElement("span");
@@ -85,61 +113,40 @@ function renderTree() {
     folderName.oncontextmenu = (event) =>
       showContextMenu(event, "folder", folderPath);
 
-    // set draggable
     folderName.draggable = true;
     folderName.ondragstart = (event) =>
       handleDragStart(event, "folder", folderPath);
-    folderName.ondragover = (event) => handleDragOver(event);
+    folderName.ondragover = handleDragOver;
     folderName.ondrop = (event) => handleDrop(event, folderPath);
 
     folderElement.appendChild(folderName);
-
-    // folder content container
-    const folderContent = document.createElement("ul");
-    folderContent.className = "folder-content";
-    folderContent.style.display = folder.open ? "block" : "none";
-
-    // Render subfolders
-    if (folder.folders) {
-      folder.folders.forEach((subFolder, fIndex) => {
-        renderFolder(subFolder, [...folderPath, fIndex], folderContent);
-      });
-    }
-
-    // Render bookmarks
-    if (folder.bookmarks && Array.isArray(folder.bookmarks)) {
-      folder.bookmarks.forEach((bookmark, bIndex) => {
-        const bookmarkElement = document.createElement("li");
-        const bookmarkLink = document.createElement("a");
-
-        bookmarkLink.href = bookmark.url;
-        bookmarkLink.target = "_blank";
-        bookmarkLink.textContent = `🔗 ${bookmark.name}`;
-
-        bookmarkElement.classList.add("bookmark");
-        bookmarkElement.appendChild(bookmarkLink);
-        bookmarkElement.oncontextmenu = (event) =>
-          showContextMenu(event, "bookmark", folderPath, bIndex);
-
-        // Make draggable
-        bookmarkElement.draggable = true;
-        bookmarkElement.ondragstart = (event) =>
-          handleDragStart(event, "bookmark", folderPath, bIndex);
-        bookmarkElement.ondragover = (event) => handleDragOver(event);
-        bookmarkElement.ondrop = (event) => handleDrop(event, folderPath);
-
-        folderContent.appendChild(bookmarkElement);
-      });
-    }
-
-    folderElement.appendChild(folderContent);
-    parentElement.appendChild(folderElement);
+    return folderElement;
   }
 
-  // Render top-level folders
-  bookmarkManager.bookmarks.forEach((folder, index) => {
-    renderFolder(folder, [index], tree);
-  });
+  function createBookmarkElement(bookmark, folderPath, bIndex) {
+    const bookmarkElement = document.createElement("li");
+    bookmarkElement.classList.add("bookmark");
+
+    const bookmarkLink = document.createElement("a");
+    bookmarkLink.href = bookmark.url;
+    bookmarkLink.target = "_blank";
+    bookmarkLink.textContent = `🔗 ${bookmark.name}`;
+
+    bookmarkElement.appendChild(bookmarkLink);
+
+    bookmarkElement.oncontextmenu = (event) =>
+      showContextMenu(event, "bookmark", folderPath, bIndex);
+
+    bookmarkElement.draggable = true;
+    bookmarkElement.ondragstart = (event) =>
+      handleDragStart(event, "bookmark", folderPath, bIndex);
+    bookmarkElement.ondragover = handleDragOver;
+    bookmarkElement.ondrop = (event) => handleDrop(event, folderPath);
+
+    return bookmarkElement;
+  }
+
+  return { render };
 }
 
 // main draggable logic
@@ -378,9 +385,10 @@ function toggleFolder(folderPath) {
 // Saves and renders the bookmarks (so I don't forget one when adding the other)
 async function saveAndRender() {
   await bookmarkManager.saveBookmarks();
-  renderTree();
+  renderTree.render();
 }
 
 const bookmarkManager = new BookmarkManager(PORT);
-// Fetch and render bookmarks on page load
+const treeRoot = document.getElementById("bookmarkTree");
+let renderTree;
 bookmarkManager.getBookmarks();
