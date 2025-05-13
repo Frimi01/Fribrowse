@@ -36,3 +36,7 @@ It's pretty intuitive:
 - Right-click folders/bookmarks for options.
 - Drag and drop to rearrange.
 - To add a URL, just copy it from your browser and place it where you want.
+
+**7. How do i change the background image?**
+
+Replace the image in the public folder with the one you want. The image name needs to be exactly the same as the old one! 
