@@ -2,12 +2,13 @@ This is FriBrowse, a minimalistic website meant to serve as a convenient hub for
 
 # 🚧 Plans
 
-1. Refit the functionality of V1.0 to follow new goals.
+1. ~~Refit the functionality of V1.0 to follow new goals.~~
 2. Add select root drag and drop feature to add possibility of workplace environment configurations.
+3. Make items droppable between objects in the same array.
 
 # ❓ Questions and Answers
 
-1. What happened to the searching feature?
+**1. What happened to the searching feature?**
 
 It's still available in the FribrowseV1.0 branch and may be included in future releases. While the focus of this project has shifted from purely research and note-taking to focus on better received more general-purpose features, the search bar was a useful workflow tool. That version will remain accessible and may continue to receive updates.
 
