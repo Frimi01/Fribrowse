@@ -52,6 +52,8 @@ function createBookmarksRenderer(rootElement, bookmarks) {
   function render() {
     rootElement.innerHTML = "";
 
+    bookmarks.forEach((folder) => sortFoldersAndBookmarks(folder));
+
     bookmarks.forEach((folder, index) => {
       renderFolder(folder, [index], rootElement);
     });
@@ -118,6 +120,23 @@ function createBookmarksRenderer(rootElement, bookmarks) {
     bookmarkElement.ondrop = (event) => handleDrop(event, folderPath);
 
     return bookmarkElement;
+  }
+  function sortFoldersAndBookmarks(node) {
+    if (node.bookmarks) {
+      node.bookmarks.sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+      );
+    }
+
+    if (node.folders) {
+      node.folders.sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+      );
+
+      node.folders.forEach((childFolder) => {
+        sortFoldersAndBookmarks(childFolder);
+      });
+    }
   }
 
   return { render };

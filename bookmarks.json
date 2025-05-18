@@ -3,21 +3,6 @@
     "name": "Example: (click me)",
     "folders": [
       {
-        "name": "Studies!",
-        "folders": [],
-        "bookmarks": [
-          {
-            "name": "Powerhouse of cell",
-            "url": "https://en.wikipedia.org/wiki/Mitochondrion"
-          },
-          {
-            "name": "Foods",
-            "url": "https://www.reddit.com/r/recipes/"
-          }
-        ],
-        "open": true
-      },
-      {
         "name": "Awesome githubs!",
         "folders": [],
         "bookmarks": [
@@ -26,15 +11,30 @@
             "url": "https://github.com/Frimi01/Frimi01-Projects"
           }
         ],
-        "open": false
+        "open": true
+      },
+      {
+        "name": "Studies!",
+        "folders": [],
+        "bookmarks": [
+          {
+            "name": "Foods",
+            "url": "https://www.reddit.com/r/recipes/"
+          },
+          {
+            "name": "Powerhouse of cell",
+            "url": "https://en.wikipedia.org/wiki/Mitochondrion"
+          }
+        ],
+        "open": true
       },
       {
         "name": "YouTube",
         "folders": [],
         "bookmarks": [
           {
-            "name": "YouTube.com",
-            "url": "https://www.youtube.com/"
+            "name": "background image",
+            "url": "https://pixabay.com/photos/colorful-painting-background-2468874/"
           }
         ],
         "open": true
@@ -42,8 +42,8 @@
     ],
     "bookmarks": [
       {
-        "name": "background image",
-        "url": "https://pixabay.com/photos/colorful-painting-background-2468874/"
+        "name": "YouTube.com",
+        "url": "https://www.youtube.com/"
       }
     ],
     "open": true
