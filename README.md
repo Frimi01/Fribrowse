@@ -10,8 +10,8 @@ This is FriBrowse, a minimalistic website meant to serve as a convenient hub for
 # 🚧 Plans
 
 1. ~~Refit the functionality of V1.0 to follow new goals.~~
-2. Add select root drag and drop feature to add possibility of workplace environment configurations.
-3. Make items droppable between objects in the same array.
+2. Add Search Bar to help navigate the folders.
+3. Add select root feature to add possibility of workplace environment configurations.
 
 # ❓ Questions and Answers
 
