@@ -1,13 +1,21 @@
 This is FriBrowse, a minimalistic website meant to serve as a convenient hub for searching the internet and doing research!
 
+*How it can on dekstop*
+![2025-05-13 06_48_38-](https://github.com/user-attachments/assets/56577f1b-ee53-436a-858b-71c1d72b3c44)
+*Right click for context menus*
+![2025-05-13 06_51_47-🔍FriBrowse](https://github.com/user-attachments/assets/31aa2bea-8c97-4561-9842-0d4f2c06ea74)
+
+
+
 # 🚧 Plans
 
-1. Refit the functionality of V1.0 to follow new goals.
-2. Add select root drag and drop feature to add possibility of workplace environment configurations.
+1. ~~Refit the functionality of V1.0 to follow new goals.~~
+2. Add Search Bar to help navigate the folders.
+3. Add select root feature to add possibility of workplace environment configurations.
 
 # ❓ Questions and Answers
 
-1. What happened to the searching feature?
+**1. What happened to the searching feature?**
 
 It's still available in the FribrowseV1.0 branch and may be included in future releases. While the focus of this project has shifted from purely research and note-taking to focus on better received more general-purpose features, the search bar was a useful workflow tool. That version will remain accessible and may continue to receive updates.
 
@@ -35,3 +43,7 @@ It's pretty intuitive:
 - Right-click folders/bookmarks for options.
 - Drag and drop to rearrange.
 - To add a URL, just copy it from your browser and place it where you want.
+
+**7. How do i change the background image?**
+
+Replace the image in the public folder with the one you want. The image name needs to be exactly the same as the old one! 
