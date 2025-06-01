@@ -26,15 +26,15 @@
             "url": "https://en.wikipedia.org/wiki/Mitochondrion"
           }
         ],
-        "open": true
+        "open": false
       },
       {
         "name": "YouTube",
         "folders": [],
         "bookmarks": [
           {
-            "name": "background image",
-            "url": "https://pixabay.com/photos/colorful-painting-background-2468874/"
+            "name": "YouTube.com",
+            "url": "https://www.youtube.com/"
           }
         ],
         "open": true
@@ -42,10 +42,10 @@
     ],
     "bookmarks": [
       {
-        "name": "YouTube.com",
-        "url": "https://www.youtube.com/"
+        "name": "background image",
+        "url": "https://pixabay.com/photos/colorful-painting-background-2468874/"
       }
     ],
-    "open": true
+    "open": false
   }
 ]
