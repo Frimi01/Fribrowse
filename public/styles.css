@@ -115,17 +115,18 @@ button:hover {
 }
 /* === Search Bar === */
 .searchbar {
-  margin: inherit;
-  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  margin: 0 var(--spacing-small);
+  flex: 1; /* Allow it to grow/shrink if needed */
 }
+
 .search-bar {
   padding: var(--spacing-small);
   background-color: var(--bg-light);
   color: var(--text-color);
   border: 1px solid var(--border-color);
-
-  margin-top: -0%;
-  border-radius: 16px 16px 16px 16px;
+  border-radius: 16px;
 }
 
 /* === Add Folder Button === */
