@@ -116,9 +116,10 @@ button:hover {
 /* === Search Bar === */
 .searchbar {
   display: flex;
-  align-items: center;
   margin: 0 var(--spacing-small);
-  flex: 1; /* Allow it to grow/shrink if needed */
+}
+.searchbar button {
+  margin-left: var(--spacing-small);
 }
 
 .search-bar {
