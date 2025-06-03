@@ -24,7 +24,7 @@ class BookmarkManager {
 
       this.bookmarks = await response.json();
       if (!renderTree) {
-        renderTree = createBookmarksRenderer(treeRoot, this.bookmarks);
+        renderTree = createBookmarksRenderer(bookmarkTree, this.bookmarks);
       }
       renderTree.render();
       console.log("Bookmarks loaded sucsessfully!");
@@ -48,14 +48,12 @@ class BookmarkManager {
 }
 
 // render logic
-function createBookmarksRenderer(rootElement, bookmarks) {
+function createBookmarksRenderer(bookmarkTree, bookmarks) {
   function render() {
-    rootElement.innerHTML = "";
-
-    bookmarks.forEach((folder) => sortFoldersAndBookmarks(folder));
+    bookmarkTree.innerHTML = "";
 
     bookmarks.forEach((folder, index) => {
-      renderFolder(folder, [index], rootElement);
+      renderFolder(folder, [index], bookmarkTree);
     });
   }
 
@@ -121,26 +119,29 @@ function createBookmarksRenderer(rootElement, bookmarks) {
 
     return bookmarkElement;
   }
-  function sortFoldersAndBookmarks(node) {
-    if (node.bookmarks) {
-      node.bookmarks.sort((a, b) =>
-        a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-      );
-    }
-
-    if (node.folders) {
-      node.folders.sort((a, b) =>
-        a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-      );
-
-      node.folders.forEach((childFolder) => {
-        sortFoldersAndBookmarks(childFolder);
-      });
-    }
-  }
 
   return { render };
 }
+
+function sortSubfoldersAndBookmarks(node) {
+  if (node.bookmarks) {
+    node.bookmarks.sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+    );
+  }
+
+  if (node.folders) {
+    node.folders.sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+    );
+
+    node.folders.forEach((childFolder) => {
+      sortSubfoldersAndBookmarks(childFolder);
+    });
+  }
+}
+
+// search bar logic
 
 // main draggable logic
 function handleDragStart(event, type, folderPath, bookmarkIndex = null) {
@@ -385,8 +386,14 @@ function toggleFolder(folderPath) {
   saveAndRender();
 }
 
-// Saves and renders the bookmarks (so I don't forget one when adding the other)
+// Saves and renders the bookmarks
 async function saveAndRender() {
+  bookmarkManager.bookmarks.sort((a, b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+  );
+  bookmarkManager.bookmarks.forEach((folder) =>
+    sortSubfoldersAndBookmarks(folder),
+  );
   await bookmarkManager.saveBookmarksToServer();
   renderTree.render();
 }
@@ -404,6 +411,6 @@ function getFolderByPath(folderPath) {
 }
 
 const bookmarkManager = new BookmarkManager(PORT);
-const treeRoot = document.getElementById("bookmarkTree");
+const bookmarkTree = document.getElementById("bookmarkTree");
 let renderTree;
 bookmarkManager.getBookmarks();
