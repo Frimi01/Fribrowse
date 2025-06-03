@@ -24,8 +24,16 @@
               Import
             </button>
             <div class="searchbar">
-              <input type="text" class="search-bar" placeholder="Search.." />
-              <button onclick="" class="search-button">Search!</button>
+              <input
+                type="text"
+                class="search-bar"
+                id="searchInput"
+                oninput="handleSearch()"
+                placeholder="Search.."
+              />
+              <button onclick="handleSearch()" class="search-button">
+                Search!
+              </button>
             </div>
           </div>
         </div>
