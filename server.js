@@ -22,37 +22,54 @@ app.use(express.static(process.cwd() + "/public")); //hosts files in public
 
 //Saves Bookmarks to local file
 app.post("/save-json", (req, res) => {
-  console.log("json save requested");
+  console.log(
+    new Date().toLocaleTimeString() +
+      " Request to save to bookmarks.json receved",
+  );
 
   const data = JSON.stringify(req.body, null, 2);
 
   fs.writeFile(BOOKMARK_PATH, data, (err) => {
     if (err) {
-      console.error("Error saving bookmarks:", err);
-      return res.status(500).json({ error: "Failed to save bookmarks" });
+      console.error(
+        new Date().toLocaleTimeString() + " Error saving bookmarks:",
+        err,
+      );
+      return res.status(500).json({ error: " Errpr saving bookmarks" });
     }
 
-    console.log("Saved JSON successfully");
+    console.log(
+      new Date().toLocaleTimeString() +
+        " Request to save to bookmarks.json completed",
+    );
     res.json({ message: "Bookmarks saved successfully!" });
   });
 });
 
 //Sends Bookmarks to Frontend
 app.get("/get-bookmarks", (req, res) => {
-  console.log("Received request for bookmarks");
+  console.log(
+    new Date().toLocaleTimeString() + " Received request to send bookmarks",
+  );
 
   fs.readFile(BOOKMARK_PATH, "utf8", (err, data) => {
     if (err) {
-      console.error("Error reading file:", err);
+      console.error(
+        new Date().toLocaleTimeString() + " Error reading file:",
+        err,
+      );
       return res.status(500).json({ error: "Failed to read bookmarks" });
     }
     res.json(JSON.parse(data)); // Send parsed JSON data
-    console.log("sent bookmarks");
+    console.log(new Date().toLocaleTimeString() + " Bookmarks sent");
   });
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(
+    new Date().toLocaleTimeString() +
+      ` Server running on http://localhost:${PORT}`,
+  );
 });
 
 // Open browser depending on OS
@@ -67,10 +84,10 @@ if (process.env.NODE_ENV !== "test") {
   }
 }
 process.on("SIGINT", () => {
-  console.log("Shutting down server...");
+  console.log(new Date().toLocaleTimeString() + " Shutting down server...");
   server.close(() => {
-    console.log("Server closed.");
     process.exitCode = 0;
+    console.log("Server closed.");
   });
 });
 
