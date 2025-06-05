@@ -27,13 +27,15 @@
               <input
                 type="text"
                 class="search-bar"
-                id="searchInput"
-                oninput="handleSearch()"
                 placeholder="Search.."
+                oninput="handleSearch(this.value)"
+                onclick="handleSearch(this.value)"
+                onblur="setTimeout(clearSearchResults, 200)"
               />
-              <button onclick="handleSearch()" class="search-button">
-                Search!
-              </button>
+              <div
+                id="searchBarResultsDropdown"
+                class="search-bar-results-dropdown"
+              ></div>
             </div>
           </div>
         </div>
