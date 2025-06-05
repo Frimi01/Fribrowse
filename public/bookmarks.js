@@ -142,6 +142,221 @@ function sortSubfoldersAndBookmarks(node) {
 }
 
 // search bar logic
+const searchInput = document.querySelector(".search-bar");
+const searchResultsDropdown = document.getElementById(
+  "searchBarResultsDropdown",
+);
+let highlightedElement = null;
+
+function handleSearch(searchTerm) {
+  searchResultsDropdown.innerHTML = ""; // Clear previous results
+  highlightedElement?.classList?.remove("highlighted-search-result"); // Remove previous highlight
+
+  if (!searchTerm.trim()) {
+    searchResultsDropdown.style.display = "none";
+    return;
+  }
+
+  const results = findSearchResults(bookmarkManager.bookmarks, searchTerm);
+
+  if (results.length > 0) {
+    results.forEach((result) => {
+      const resultElement = document.createElement("a");
+      const highlightedName = highlightMatch(result.name, searchTerm);
+      resultElement.innerHTML = `${result.type === "folder" ? "📁 " : "🔗 "}${highlightedName}`;
+      resultElement.addEventListener("mouseover", () =>
+        highlightInTree(result.path),
+      );
+      resultElement.addEventListener("click", () =>
+        handleSearchResultClick(result),
+      );
+      searchResultsDropdown.appendChild(resultElement);
+    });
+    searchResultsDropdown.style.display = "block";
+  } else {
+    searchResultsDropdown.style.display = "none";
+  }
+}
+
+function findSearchResults(items, searchTerm, path = []) {
+  const results = [];
+  const lowerSearchTerm = searchTerm.toLowerCase();
+
+  items.forEach((item, index) => {
+    const currentPath = [...path, index];
+    if (item.name.toLowerCase().includes(lowerSearchTerm)) {
+      results.push({
+        type: item.folders ? "folder" : "bookmark",
+        name: item.name,
+        path: currentPath,
+      });
+    }
+    if (item.folders) {
+      results.push(
+        ...findSearchResults(item.folders, searchTerm, [
+          ...currentPath,
+          "folders",
+        ]),
+      );
+    }
+    if (item.bookmarks) {
+      results.push(
+        ...findSearchResults(item.bookmarks, searchTerm, [
+          ...currentPath,
+          "bookmarks",
+        ]),
+      );
+    }
+  });
+  return results;
+}
+
+function highlightMatch(text, searchTerm) {
+  const regex = new RegExp(searchTerm, "gi");
+  return text.replace(regex, '<span class="highlight">$&</span>');
+}
+
+function highlightInTree(path) {
+  // Remove previous highlight
+  if (highlightedElement) {
+    highlightedElement.classList.remove("highlighted-search-result");
+  }
+
+  let elementToHighlight = bookmarkTree;
+  let currentLevel = bookmarkManager.bookmarks;
+
+  for (const segment of path) {
+    if (typeof segment === "number" && currentLevel && currentLevel[segment]) {
+      elementToHighlight = elementToHighlight.children[segment];
+      if (currentLevel[segment].folders) {
+        currentLevel = currentLevel[segment].folders;
+      } else if (currentLevel[segment].bookmarks) {
+        currentLevel = currentLevel[segment].bookmarks;
+      } else {
+        currentLevel = null;
+      }
+    } else if (segment === "folders" && elementToHighlight) {
+      elementToHighlight = elementToHighlight.querySelector(".folder-content");
+    } else if (segment === "bookmarks" && elementToHighlight) {
+      elementToHighlight = elementToHighlight.querySelector(".folder-content");
+    }
+    if (!elementToHighlight) break;
+  }
+
+  if (elementToHighlight) {
+    // If it's a folder, highlight the folder span, if it's a bookmark, highlight the link's parent (li)
+    const target =
+      elementToHighlight.querySelector(".folder") ||
+      elementToHighlight.querySelector("a")?.parentNode;
+    if (target) {
+      target.classList.add("highlighted-search-result");
+      highlightedElement = target;
+    }
+  }
+}
+
+function handleSearchResultClick(result) {
+  searchResultsDropdown.style.display = "none";
+  searchInput.value = ""; // Clear the search bar
+
+  if (result.type === "bookmark") {
+    window.open(getBookmarkByPath(result.path).url, "_blank");
+  } else if (result.type === "folder") {
+    const folder = getFolderByPathForClick(result.path);
+    if (folder) {
+      folder.open = true;
+      saveAndRender().then(() => {
+        // Scroll to the folder in the tree (basic implementation)
+        const element = findElementInTree(result.path);
+        element?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }
+}
+
+function clearSearchResults() {
+  setTimeout(() => {
+    if (!searchInput.matches(":focus")) {
+      searchResultsDropdown.style.display = "none";
+      if (highlightedElement) {
+        highlightedElement.classList.remove("highlighted-search-result");
+        highlightedElement = null;
+      }
+    }
+  }, 100);
+}
+
+// Helper function to get a bookmark by its path
+function getBookmarkByPath(path) {
+  let current = bookmarkManager.bookmarks;
+  for (let i = 0; i < path.length - 1; i++) {
+    const segment = path[i];
+    if (
+      typeof segment === "number" &&
+      current &&
+      current[segment] &&
+      (current[segment].folders || current[segment].bookmarks)
+    ) {
+      if (path[i + 1] === "folders") {
+        current = current[segment].folders;
+        i++;
+      } else if (path[i + 1] === "bookmarks") {
+        current = current[segment].bookmarks;
+        i++;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+  const lastSegment = path[path.length - 1];
+  return typeof lastSegment === "number" && current && current[lastSegment]
+    ? current[lastSegment]
+    : null;
+}
+
+// Helper function to get a folder by its path for click action
+function getFolderByPathForClick(path) {
+  let current = bookmarkManager.bookmarks;
+  for (let i = 0; i < path.length; i++) {
+    const segment = path[i];
+    if (typeof segment === "number" && current && current[segment]) {
+      current = current[segment].folders || current;
+      if (Array.isArray(current)) {
+        current = current[segment];
+      }
+    } else if (segment === "folders" && Array.isArray(current)) {
+      // No need to move further down for 'folders'
+    } else if (segment === "bookmarks") {
+      return null; // Cannot open a 'bookmarks' level
+    } else {
+      return null;
+    }
+  }
+  return current;
+}
+
+// Helper function to find the DOM element in the tree by path
+function findElementInTree(path) {
+  let element = bookmarkTree.children[path[0]];
+  if (!element) return null;
+
+  for (let i = 1; i < path.length; i++) {
+    const segment = path[i];
+    if (
+      typeof segment === "number" &&
+      element &&
+      element.querySelector(".folder-content") &&
+      element.querySelector(".folder-content").children[segment]
+    ) {
+      element = element.querySelector(".folder-content").children[segment];
+    } else {
+      return element; // Return the last found element if path is not fully matched
+    }
+  }
+  return element;
+}
 
 // main draggable logic
 function handleDragStart(event, type, folderPath, bookmarkIndex = null) {
