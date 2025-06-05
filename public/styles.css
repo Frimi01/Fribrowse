@@ -113,13 +113,11 @@ button {
 button:hover {
   background-color: var(--primary-hover);
 }
+
 /* === Search Bar === */
 .searchbar {
   display: flex;
   margin: 0 var(--spacing-small);
-}
-.searchbar button {
-  margin-left: var(--spacing-small);
 }
 
 .search-bar {
@@ -128,6 +126,42 @@ button:hover {
   color: var(--text-color);
   border: 1px solid var(--border-color);
   border-radius: 16px;
+}
+
+.search-bar-results-dropdown {
+  position: absolute;
+  top: 80px;
+  right: 0;
+  border-radius: 15px;
+  width: 300px;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-top: none;
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+}
+
+.search-bar-results-dropdown a {
+  border-radius: 15px;
+  display: block;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: #333;
+  cursor: pointer;
+}
+
+.search-bar-results-dropdown a:hover {
+  background-color: #eee;
+}
+
+.highlight {
+  font-weight: bold;
+}
+
+.highlighted-search-result {
+  background-color: lightblue;
 }
 
 /* === Add Folder Button === */
