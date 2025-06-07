@@ -225,21 +225,35 @@ function highlightInTree(path) {
   let elementToHighlight = bookmarkTree;
   let currentLevel = bookmarkManager.bookmarks;
 
-  for (const segment of path) {
+  for (let i = 0; i < path.length; i++) {
+    const segment = path[i];
+    console.log(segment, elementToHighlight);
+
     if (typeof segment === "number" && currentLevel && currentLevel[segment]) {
       elementToHighlight = elementToHighlight.children[segment];
       if (currentLevel[segment].folders) {
         currentLevel = currentLevel[segment].folders;
-      } else if (currentLevel[segment].bookmarks) {
-        currentLevel = currentLevel[segment].bookmarks;
       } else {
         currentLevel = null;
       }
     } else if (segment === "folders" && elementToHighlight) {
       elementToHighlight = elementToHighlight.querySelector(".folder-content");
     } else if (segment === "bookmarks" && elementToHighlight) {
-      elementToHighlight = elementToHighlight.querySelector(".folder-content");
+      const folderContent = elementToHighlight.querySelector(".folder-content");
+      const bookmarks = folderContent
+        ? Array.from(folderContent.querySelectorAll(":scope > .bookmark"))
+        : [];
+      const bookmarkIndex = path[i + 1]; // lookahead to get the index
+      console.log(bookmarkIndex, bookmarks);
+      if (typeof bookmarkIndex === "number" && bookmarks[bookmarkIndex]) {
+        elementToHighlight = bookmarks[bookmarkIndex];
+        i++; // skip the index in the next iteration
+      } else {
+        elementToHighlight = null;
+        break;
+      }
     }
+
     if (!elementToHighlight) break;
   }
 
@@ -247,7 +261,8 @@ function highlightInTree(path) {
     // If it's a folder, highlight the folder span, if it's a bookmark, highlight the link's parent (li)
     const target =
       elementToHighlight.querySelector(".folder") ||
-      elementToHighlight.querySelector("a")?.parentNode;
+      elementToHighlight.querySelector("a") ||
+      elementToHighlight;
     if (target) {
       target.classList.add("highlighted-search-result");
       highlightedElement = target;
@@ -295,7 +310,7 @@ function getBookmarkByPath(path) {
       typeof segment === "number" &&
       current &&
       current[segment] &&
-      (current[segment].folders || current[segment].bookmarks)
+      (current[segment].folders || current[segment].bookmarks) //bug?
     ) {
       if (path[i + 1] === "folders") {
         current = current[segment].folders;
