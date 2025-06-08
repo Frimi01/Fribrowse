@@ -130,23 +130,27 @@ button:hover {
 
 .search-bar-results-dropdown {
   position: absolute;
+  margin: 2px;
   top: 80px;
   right: 0;
   border-radius: 15px;
   width: 300px;
   background-color: #f9f9f9;
-  border: 1px solid #ccc;
-  border-top: none;
+  border: 4px solid;
   z-index: 10;
   max-height: 200px;
   overflow-y: auto;
   display: none;
 }
 
+.chainEmoji {
+  background-color: green;
+  border-radius: 3px;
+}
+
 .search-bar-results-dropdown a {
-  border-radius: 15px;
-  display: block;
-  padding: 8px 12px;
+  display: block ruby;
+  padding: 4px 2px;
   text-decoration: none;
   color: #333;
   cursor: pointer;
@@ -161,7 +165,7 @@ button:hover {
 }
 
 .highlighted-search-result {
-  background-color: lightblue;
+  background-color: darkcyan;
 }
 
 /* === Add Folder Button === */
