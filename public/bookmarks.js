@@ -149,8 +149,8 @@ const searchResultsDropdown = document.getElementById(
 let highlightedElement = null;
 
 function handleSearch(searchTerm) {
-  searchResultsDropdown.innerHTML = ""; // Clear previous results
-  highlightedElement?.classList?.remove("highlighted-search-result"); // Remove previous highlight
+  searchResultsDropdown.innerHTML = "";
+  highlightedElement?.classList?.remove("highlighted-search-result");
 
   if (!searchTerm.trim()) {
     searchResultsDropdown.style.display = "none";
@@ -163,7 +163,7 @@ function handleSearch(searchTerm) {
     results.forEach((result) => {
       const resultElement = document.createElement("a");
       const highlightedName = highlightMatch(result.name, searchTerm);
-      resultElement.innerHTML = `${result.type === "folder" ? "📁 " : "🔗 "}${highlightedName}`;
+      resultElement.innerHTML = `${result.type === "folder" ? "📁" : `<a href="${findurl(result)}" class="chainEmoji" target="_blank" rel="noopener noreferrer">🔗</a>`} ${highlightedName}`;
       resultElement.addEventListener("mouseover", () =>
         highlightInTree(result.path),
       );
@@ -178,6 +178,40 @@ function handleSearch(searchTerm) {
   }
 }
 
+function findurl(result) {
+  const path = result.path;
+  let targetBookmark;
+  let cbookmark = bookmarkManager.bookmarks;
+  for (let i = 0; i < path.length - 1; i++) {
+    const segment = path[i];
+    if (
+      !(
+        typeof segment === "number" &&
+        cbookmark &&
+        cbookmark[segment] &&
+        (cbookmark[segment].folders || cbookmark[segment].bookmarks)
+      )
+    ) {
+      return null;
+    } else {
+      if (path[i + 1] === "folders") {
+        cbookmark = cbookmark[segment].folders;
+        i++;
+      } else if (path[i + 1] === "bookmarks") {
+        cbookmark = cbookmark[segment].bookmarks;
+        i++;
+      } else {
+        return null;
+      }
+    }
+    const lastSegment = path[path.length - 1];
+    targetBookmark =
+      typeof lastSegment === "number" && cbookmark && cbookmark[lastSegment]
+        ? cbookmark[lastSegment]
+        : null;
+  }
+  return targetBookmark.url;
+}
 function findSearchResults(items, searchTerm, path = []) {
   const results = [];
   const lowerSearchTerm = searchTerm.toLowerCase();
@@ -247,7 +281,7 @@ function highlightInTree(path) {
       console.log(bookmarkIndex, bookmarks);
       if (typeof bookmarkIndex === "number" && bookmarks[bookmarkIndex]) {
         elementToHighlight = bookmarks[bookmarkIndex];
-        i++; // skip the index in the next iteration
+        i++;
       } else {
         elementToHighlight = null;
         break;
@@ -258,7 +292,6 @@ function highlightInTree(path) {
   }
 
   if (elementToHighlight) {
-    // If it's a folder, highlight the folder span, if it's a bookmark, highlight the link's parent (li)
     const target =
       elementToHighlight.querySelector(".folder") ||
       elementToHighlight.querySelector("a") ||
@@ -272,41 +305,66 @@ function highlightInTree(path) {
 
 function handleSearchResultClick(result) {
   searchResultsDropdown.style.display = "none";
-  searchInput.value = ""; // Clear the search bar
 
-  if (result.type === "bookmark") {
+  openParents();
+
+  function openParents() {
     const path = result.path;
-    let targetBookmark;
     let cbookmark = bookmarkManager.bookmarks;
+
     for (let i = 0; i < path.length - 1; i++) {
       const segment = path[i];
+
       if (
-        typeof segment === "number" &&
-        cbookmark &&
-        cbookmark[segment] &&
-        (cbookmark[segment].folders || cbookmark[segment].bookmarks)
+        !(
+          typeof segment === "number" &&
+          cbookmark &&
+          cbookmark[segment] &&
+          (cbookmark[segment].folders || cbookmark[segment].bookmarks)
+        )
       ) {
-        if (path[i + 1] === "folders") {
-          cbookmark = cbookmark[segment].folders;
-          i++;
-        } else if (path[i + 1] === "bookmarks") {
-          cbookmark = cbookmark[segment].bookmarks;
-          i++;
-        } else {
-          return null;
-        }
-      } else {
-        return null;
+        console.error(
+          "Invalid path segment or bookmark structure at index",
+          i,
+          path,
+        );
       }
-      const lastSegment = path[path.length - 1];
-      targetBookmark =
-        typeof lastSegment === "number" && cbookmark && cbookmark[lastSegment]
-          ? cbookmark[lastSegment]
-          : null;
+
+      if (path[i + 1] === "folders") {
+        cbookmark[segment].open = true;
+        cbookmark = cbookmark[segment].folders;
+        i++;
+      } else if (path[i + 1] === "bookmarks") {
+        cbookmark[segment].open = true;
+        i++;
+      } else {
+        console.error("Unexpected path segment type after index", i, path);
+      }
     }
-    window.open(targetBookmark.url, "_blank");
-  } else if (result.type === "folder") {
+
+    const lastIndex = path.length - 1;
+    const lastSegment = path[lastIndex];
+
+    if (result.type === "folder") {
+      if (
+        typeof lastSegment === "number" &&
+        cbookmark &&
+        cbookmark[lastSegment]
+      ) {
+        cbookmark[lastSegment].open = true;
+        console.log("Opened target folder:", cbookmark[lastSegment]);
+      } else {
+        console.error("Invalid target folder at end of path:", path);
+      }
+    } else if (!result.type === "bookmark") {
+      console.error(
+        "Unknown result type for the last segment:",
+        result.type,
+        path,
+      );
+    }
   }
+  saveAndRender();
 }
 
 function clearSearchResults() {
@@ -318,6 +376,7 @@ function clearSearchResults() {
         highlightedElement = null;
       }
     }
+    console.log("hi");
   }, 100);
 }
 
@@ -360,11 +419,9 @@ function moveFolder(sourcePath, targetPath) {
   let targetFolder = getFolderByPath(targetPath);
   if (!targetFolder || !targetFolder.folders) return;
 
-  // Remove from source
   let index = sourcePath[sourcePath.length - 1];
   getFolderByPath(sourcePath.slice(0, -1)).folders.splice(index, 1);
 
-  // Add to target
   targetFolder.folders.push(sourceFolder);
   saveAndRender();
 }
@@ -409,7 +466,6 @@ function importBookmarks(event) {
 // Main Context Menu Logic:
 function showContextMenu(event, type, folderPath, bookmarkIndex = null) {
   event.preventDefault();
-  //console.log("Context menu opened:", { type, folderPath });
   currentTarget = { type, folderPath, bookmarkIndex };
 
   const menu = document.getElementById("contextMenu");
@@ -437,7 +493,7 @@ function showContextMenu(event, type, folderPath, bookmarkIndex = null) {
     ],
   };
 
-  menu.innerHTML = ""; // Clear existing menu
+  menu.innerHTML = "";
   actions[type]?.forEach(({ label, action }) => {
     const button = document.createElement("button");
     button.textContent = label;
@@ -503,7 +559,7 @@ function addBookmark(folderPath) {
     return;
   }
 
-  targetFolder.bookmarks.push({ name, url }); // Add bookmark
+  targetFolder.bookmarks.push({ name, url });
   saveAndRender();
 }
 
@@ -531,14 +587,14 @@ function deleteFolder(folderPath) {
   if (!confirm("Are you sure you want to delete this folder?")) return;
 
   let parentPath = [...folderPath];
-  let folderIndex = parentPath.pop(); // Get the last index (folder to delete)
+  let folderIndex = parentPath.pop();
 
   let parentFolder = getFolderByPath(parentPath);
 
   if (parentFolder) {
-    parentFolder.folders.splice(folderIndex, 1); // Remove the folder from its parent's list
+    parentFolder.folders.splice(folderIndex, 1);
   } else {
-    bookmarkManager.bookmarks.splice(folderIndex, 1); // If it's a top-level folder
+    bookmarkManager.bookmarks.splice(folderIndex, 1);
   }
 
   saveAndRender();
@@ -555,7 +611,6 @@ function deleteBookmark(folderPath, bookmarkIndex) {
   saveAndRender();
 }
 
-// Opens and closes the folder:
 function toggleFolder(folderPath) {
   const folder = getFolderByPath(folderPath);
   if (!folder) return console.error("Folder not found:", folderPath);
@@ -564,7 +619,6 @@ function toggleFolder(folderPath) {
   saveAndRender();
 }
 
-// Saves and renders the bookmarks
 async function saveAndRender() {
   bookmarkManager.bookmarks.sort((a, b) =>
     a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
@@ -583,7 +637,7 @@ function getFolderByPath(folderPath) {
     if (!folder.folders || !folder.folders[index]) {
       return null;
     }
-    folder = folder.folders[index]; // Move into the subfolder
+    folder = folder.folders[index];
   }
   return folder;
 }
