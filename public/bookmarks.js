@@ -261,7 +261,7 @@ function highlightInTree(path) {
 
   for (let i = 0; i < path.length; i++) {
     const segment = path[i];
-    console.log(segment, elementToHighlight);
+    // console.log(segment, elementToHighlight);
 
     if (typeof segment === "number" && currentLevel && currentLevel[segment]) {
       elementToHighlight = elementToHighlight.children[segment];
@@ -278,7 +278,6 @@ function highlightInTree(path) {
         ? Array.from(folderContent.querySelectorAll(":scope > .bookmark"))
         : [];
       const bookmarkIndex = path[i + 1]; // lookahead to get the index
-      console.log(bookmarkIndex, bookmarks);
       if (typeof bookmarkIndex === "number" && bookmarks[bookmarkIndex]) {
         elementToHighlight = bookmarks[bookmarkIndex];
         i++;
@@ -352,7 +351,6 @@ function handleSearchResultClick(result) {
         cbookmark[lastSegment]
       ) {
         cbookmark[lastSegment].open = true;
-        console.log("Opened target folder:", cbookmark[lastSegment]);
       } else {
         console.error("Invalid target folder at end of path:", path);
       }
@@ -376,7 +374,6 @@ function clearSearchResults() {
         highlightedElement = null;
       }
     }
-    console.log("hi");
   }, 100);
 }
 
@@ -456,8 +453,12 @@ function importBookmarks(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function (e) {
+  reader.onload = async function (e) {
     bookmarkManager.bookmarks = JSON.parse(e.target.result);
+    renderTree = createBookmarksRenderer(
+      bookmarkTree,
+      bookmarkManager.bookmarks,
+    );
     saveAndRender();
   };
   reader.readAsText(file);
