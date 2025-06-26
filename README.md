@@ -1,6 +1,6 @@
 This is FriBrowse, a minimalistic website meant to serve as a convenient hub for searching the internet and doing research!
 
-*How it can on dekstop*
+*How it looks in chrome*
 ![2025-05-13 06_48_38-](https://github.com/user-attachments/assets/56577f1b-ee53-436a-858b-71c1d72b3c44)
 *Right click for context menus*
 ![2025-05-13 06_51_47-🔍FriBrowse](https://github.com/user-attachments/assets/31aa2bea-8c97-4561-9842-0d4f2c06ea74)
