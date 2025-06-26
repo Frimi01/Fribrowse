@@ -123,24 +123,6 @@ function createBookmarksRenderer(bookmarkTree, bookmarks) {
   return { render };
 }
 
-function sortSubfoldersAndBookmarks(node) {
-  if (node.bookmarks) {
-    node.bookmarks.sort((a, b) =>
-      a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-    );
-  }
-
-  if (node.folders) {
-    node.folders.sort((a, b) =>
-      a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-    );
-
-    node.folders.forEach((childFolder) => {
-      sortSubfoldersAndBookmarks(childFolder);
-    });
-  }
-}
-
 // search bar logic
 const searchInput = document.querySelector(".search-bar");
 const searchResultsDropdown = document.getElementById(
@@ -629,6 +611,24 @@ async function saveAndRender() {
   );
   await bookmarkManager.saveBookmarksToServer();
   renderTree.render();
+
+  function sortSubfoldersAndBookmarks(node) {
+    if (node.bookmarks) {
+      node.bookmarks.sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+      );
+    }
+
+    if (node.folders) {
+      node.folders.sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+      );
+
+      node.folders.forEach((childFolder) => {
+        sortSubfoldersAndBookmarks(childFolder);
+      });
+    }
+  }
 }
 
 // Function to find a folder by index path
