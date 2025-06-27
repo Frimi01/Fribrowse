@@ -1,9 +1,11 @@
+//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import {
   handleDragStart,
   handleDragOver,
   handleDrop,
 } from "./draggableLogic.js";
 import { getFolderByPath, saveAndRender } from "./utils.js";
+import { showContextMenu } from "./contextMenu.js";
 
 export default function createBookmarksRenderer(bookmarkTree, bookmarks) {
   function render() {

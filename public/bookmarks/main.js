@@ -1,3 +1,4 @@
+//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import bookmarkManager from "./bookmarkManager.js";
 import createBookmarksRenderer from "./renderer.js";
 

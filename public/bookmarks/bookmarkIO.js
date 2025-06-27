@@ -1,3 +1,4 @@
+//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import bookmarkManager from "./bookmarkManager.js";
 import { saveAndRender } from "./utils.js";
 import { reinitializeRenderTree } from "./main.js";
@@ -26,5 +27,18 @@ function importBookmarks(event) {
   reader.readAsText(file);
 }
 
+function addFolder() {
+  const name = prompt("Enter folder name:");
+  if (name)
+    bookmarkManager.bookmarks.push({
+      name,
+      folders: [],
+      bookmarks: [],
+      open: false,
+    });
+  saveAndRender();
+}
+
 window.exportBookmarks = exportBookmarks;
 window.importBookmarks = importBookmarks;
+window.addFolder = addFolder;

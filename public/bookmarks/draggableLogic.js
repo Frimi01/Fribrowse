@@ -1,3 +1,4 @@
+//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import { getFolderByPath, saveAndRender } from "./utils.js";
 
 export function handleDragStart(event, type, folderPath, bookmarkIndex = null) {
