@@ -18,7 +18,7 @@ app.use(
   }),
 ); // Allow frontend to call API
 
-app.use(express.static(process.cwd() + "/public")); //hosts files in public
+app.use(express.static(process.cwd() + "/public/bookmarks")); //hosts files in public
 
 //Saves Bookmarks to local file
 app.post("/save-json", (req, res) => {
