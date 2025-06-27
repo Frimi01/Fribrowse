@@ -1,7 +1,7 @@
+//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import { saveAndRender } from "./utils.js";
 import bookmarkManager from "./bookmarkManager.js";
 
-// search bar logic
 const searchInput = document.querySelector(".search-bar");
 const searchResultsDropdown = document.getElementById(
   "searchBarResultsDropdown",

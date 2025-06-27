@@ -1,3 +1,4 @@
+//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 class BookmarkManager {
   constructor() {
     this.port = 3002;

@@ -1,7 +1,7 @@
+// search bar logic
 import bookmarkManager from "./bookmarkManager.js";
 import { renderTree } from "./main.js";
 
-// Function to find a folder by index path
 export function getFolderByPath(folderPath) {
   let folder = { folders: bookmarkManager.bookmarks };
   for (let index of folderPath) {
