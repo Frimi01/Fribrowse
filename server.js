@@ -70,7 +70,6 @@ app.get("/get-bookmarks", (req, res) => {
 });
 
 // Backup logic
-const DATA_FILE = './bookmarks.json';
 const BACKUP_DIR = './backups';
 
 function backupJson(backupType) {
@@ -81,7 +80,7 @@ function backupJson(backupType) {
     const backupFile = path.join(BACKUP_DIR,
         `data-backup-${backupType}.json`);
 
-    fs.copyFile(DATA_FILE, backupFile, (err) => {
+    fs.copyFile(BOOKMARK_PATH, backupFile, (err) => {
         if (err) {
             console.error('Backup failed:', err);
         } else {
