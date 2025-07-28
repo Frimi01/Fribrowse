@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"io"
 	"log"
 	"net/http"
@@ -8,6 +9,9 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
+
+	"github.com/getlantern/systray"
 )
 
 const (
@@ -16,26 +20,64 @@ const (
 	backupDir     = "./backups"
 )
 
+//go:embed icon.ico
+var iconData []byte
+var stopChan = make(chan os.Signal, 1)
+
 func main() {
+	systray.Run(onReady, onExit)
+}
+
+func onReady() {
+	systray.SetIcon(iconData)
+	systray.SetTitle("Bookmark Server")
+	systray.SetTooltip("Bookmark Server")
+
+	openItem := systray.AddMenuItem("Open in browser", "Launch the web UI")
+	quitItem := systray.AddMenuItem("Quit", "Shut down the server")
+
+	// Start server
+	go startServer()
+
+	// Handle menu clicks
+	go func() {
+		for {
+			select {
+			case <-openItem.ClickedCh:
+				openBrowser("http://localhost" + port)
+			case <-quitItem.ClickedCh:
+				log.Println("Quit requested from tray")
+				stopChan <- os.Interrupt // simulate signal
+			}
+		}
+	}()
+
+	// Setup signal handling
+	signal.Notify(stopChan, os.Interrupt)
+	go func() {
+		<-stopChan
+		log.Println("Shutting down...")
+		backupJSON("lastServerShutdown")
+		systray.Quit()
+	}()
+}
+
+func onExit() {
+	log.Println("Tray app exiting.")
+}
+
+func startServer() {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir("./public/bookmarks")))
 	mux.HandleFunc("/get-bookmarks", getBookmarksHandler)
 	mux.HandleFunc("/save-json", saveJSONHandler)
 
-	go func() {
-		log.Println("Server running on http://localhost" + port)
-		openBrowser("http://localhost" + port)
-		if err := http.ListenAndServe(port, mux); err != nil {
-			log.Fatalf("Server failed: %v", err)
-		}
-	}()
+	log.Println("Server running on http://localhost" + port)
+	openBrowser("http://localhost" + port)
 
-	// Handle graceful shutdown
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt)
-	<-stop
-	log.Println("Shutting down...")
-	backupJSON("lastServerShutdown")
+	if err := http.ListenAndServe(port, mux); err != nil {
+		log.Fatalf("Server failed: %v", err)
+	}
 }
 
 func getBookmarksHandler(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +112,7 @@ func saveJSONHandler(w http.ResponseWriter, r *http.Request) {
 
 func backupJSON(label string) {
 	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
-		os.Mkdir(backupDir, 0755)
+		os.MkdirAll(backupDir, 0755)
 	}
 	backupFile := filepath.Join(backupDir, "data-backup-"+label+".json")
 	err := copyFile(bookmarksFile, backupFile)
@@ -91,13 +133,18 @@ func copyFile(src, dst string) error {
 
 func openBrowser(url string) {
 	var cmd *exec.Cmd
-	switch os := os.Getenv("GOOS"); os {
+	switch runtime.GOOS {
 	case "windows":
+		log.Println("Opening Windows browser")
 		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
 	case "darwin":
+		log.Println("Opening macOS browser")
 		cmd = exec.Command("open", url)
 	default:
+		log.Println("Opening Linux browser")
 		cmd = exec.Command("xdg-open", url)
 	}
-	cmd.Start()
+	if err := cmd.Start(); err != nil {
+		log.Println("Failed to open browser:", err)
+	}
 }
