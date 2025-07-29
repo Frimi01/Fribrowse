@@ -1,3 +1,7 @@
+backups/
+.direnv/
+.envrc
+
 # Ignore logs
 logs/
 *.log
