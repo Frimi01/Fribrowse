@@ -73,7 +73,6 @@ func startServer() {
 	mux.HandleFunc("/save-json", saveJSONHandler)
 
 	log.Println("Server running on http://localhost" + port)
-	openBrowser("http://localhost" + port)
 
 	if err := http.ListenAndServe(port, mux); err != nil {
 		log.Fatalf("Server failed: %v", err)
