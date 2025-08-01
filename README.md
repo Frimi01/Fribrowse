@@ -1,4 +1,6 @@
-This is FriBrowse, a minimalistic website meant to serve as a convenient hub for searching the internet and doing research!
+# 🌐 FriBrowse
+
+FriBrowse is a minimalistic, customizable hub for organizing bookmarks, searching the internet, and streamlining research workflows.
 
 *How it looks in chrome*
 ![2025-05-13 06_48_38-](https://github.com/user-attachments/assets/56577f1b-ee53-436a-858b-71c1d72b3c44)
@@ -10,8 +12,30 @@ This is FriBrowse, a minimalistic website meant to serve as a convenient hub for
 # 🚧 Plans
 
 1. ~~Refit the functionality of V1.0 to follow new goals.~~
-2. Add Search Bar to help navigate the folders.
-3. Add select root feature to add possibility of workplace environment configurations.
+2. ~~Add Search Bar for navigating folders.~~
+3. ~~Rewrite backend in go.~~
+4. Make a website ready version of the server that can be deployed and handle multiple users.
+5. Add "Select Root" feature to support workplace-specific configurations.
+
+# 🏗️  Download and Build Instructions
+For a ready-to-use version, visit the [Releases](https://github.com/Frimi01/Fribrowse/releases/) section.
+If the release is outdated, open an issue requesting an updated build.
+
+If you simply want the app up and running you can download all the neccasary
+files already set up for you in the GitHub Releases panel. If it's outdated and
+you want a updated version you can issue a issue.
+
+## Windows:
+To build the app without opening a console you can use the following command:
+```bash
+go build -ldflags -H=windowsgui
+```
+## Linux and Mac
+On linux you should usually be able to build it normally with `go build` if you have gcc, gtk3 and libayatana-appindicator installed. 
+
+For further instructions you should try to following the instructions from systray: https://github.com/getlantern/systray
+
+MacOS is untested.
 
 # ❓ Questions and Answers
 
@@ -29,13 +53,14 @@ Feel free to open an issue or submit a pull request! I'm happy to consider impro
 
 **4. I found a bug. What should I do?**
 
-Please create an issue describing the problem. Include any relevant details such as error messages, screenshots, or steps to reproduce the bug.
+Please open an issue describing the problem. Include any relevant details if possible:
+- Description of bug and intended behaviour.
+- Error messages (try to run the server from a console if possible)
+- Screenshots
+- Steps to reproduce the bug.
 
-**5. How to download for use?**
 
-Official Windows releases are available via the GitHub Releases tab. For other platforms or the latest changes, clone the repo and build it manually.
-
-**6. How do I use this?**
+**5. How do I use this?**
 
 It's pretty intuitive:
 
@@ -44,6 +69,6 @@ It's pretty intuitive:
 - Drag and drop to rearrange.
 - To add a URL, just copy it from your browser and place it where you want.
 
-**7. How do i change the background image?**
+**6. How do i change the background image?**
 
-Replace the image in the public folder with the one you want. The image name needs to be exactly the same as the old one! 
+Replace the image in the public/bookmark folder with the one you want. The image name needs to be exactly the same as the old one! 
