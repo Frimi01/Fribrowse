@@ -26,6 +26,7 @@ class BookmarkManager {
   }
 
   async saveBookmarksToServer() {
+ while (true) {
     try {
       await fetch(`http://localhost:${this.port}/save-json`, {
         method: "POST",
@@ -33,10 +34,15 @@ class BookmarkManager {
         body: JSON.stringify(this.bookmarks),
       });
       console.log("Bookmarks saved successfully!");
+      break; 
     } catch (error) {
       console.error("Failed to save bookmarks:", error);
+      const retry = confirm("Failed to reach server. Try starting the server and save again. Do you wish to retry?");
+      if (!retry) {
+        break; 
+      }
     }
-  }
+  }  }
 }
 const bookmarkManager = new BookmarkManager();
 export default bookmarkManager;
