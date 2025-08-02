@@ -14,14 +14,18 @@ export function getFolderByPath(folderPath) {
 }
 
 export async function saveAndRender() {
-  bookmarkManager.bookmarks.sort((a, b) =>
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-  );
-  bookmarkManager.bookmarks.forEach((folder) =>
-    sortSubfoldersAndBookmarks(folder),
-  );
-  await bookmarkManager.saveBookmarksToServer();
-  renderTree.render();
+    bookmarkManager.bookmarks.sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+    );
+    bookmarkManager.bookmarks.forEach((folder) =>
+        sortSubfoldersAndBookmarks(folder),
+    );
+        await bookmarkManager.saveBookmarksToServer();
+
+    renderTree.render();
+}
+
+
 
   function sortSubfoldersAndBookmarks(node) {
     if (node.bookmarks) {
@@ -40,4 +44,3 @@ export async function saveAndRender() {
       });
     }
   }
-}
