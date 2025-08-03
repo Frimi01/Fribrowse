@@ -1,56 +1,58 @@
 <!--Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects -->
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🔍FriBrowse</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="container">
-      <div class="main-content">
-        <div class="header-bar">
-          <h1>Bookmarks</h1>
-          <div class="bookmark-buttons">
-            <button onclick="exportBookmarks()">Export</button>
-            <input
-              type="file"
-              id="importFile"
-              onchange="importBookmarks(event)"
-              hidden
-            />
-            <button onclick="document.getElementById('importFile').click()">
-              Import
-            </button>
-            <div class="searchbar">
-              <input
-                type="text"
-                class="search-bar"
-                placeholder="Search.."
-                oninput="handleSearch(this.value)"
-                onclick="handleSearch(this.value)"
-                onblur="setTimeout(clearSearchResults, 200)"
-              />
-              <div
-                id="searchBarResultsDropdown"
-                class="search-bar-results-dropdown"
-              ></div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>🔍FriBrowse</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="main-content">
+                <div class="header-bar">
+                    <h1>Bookmarks</h1>
+                    <div class="bookmark-buttons">
+                        <button onclick="exportBookmarks()">Export</button>
+                        <input
+                            type="file"
+                            id="importFile"
+                            onchange="importBookmarks(event)"
+                            hidden
+                        />
+                        <button
+                            onclick="document.getElementById('importFile').click()"
+                        >
+                            Import
+                        </button>
+                        <div class="searchbar">
+                            <input
+                                type="text"
+                                class="search-bar"
+                                placeholder="Search.."
+                                oninput="handleSearch(this.value)"
+                                onclick="handleSearch(this.value)"
+                                onblur="setTimeout(clearSearchResults, 200)"
+                            />
+                            <div
+                                id="searchBarResultsDropdown"
+                                class="search-bar-results-dropdown"
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+
+                <ul id="bookmarkTree"></ul>
+                <button class="add-folder-button" onclick="addFolder()">
+                    Add Folder
+                </button>
             </div>
-          </div>
+
+            <div id="contextMenu" class="context-menu"></div>
+
+            <script type="module" src="main.js"></script>
+            <script type="module" src="search.js"></script>
+            <script type="module" src="bookmarkIO.js"></script>
         </div>
-
-        <ul id="bookmarkTree"></ul>
-        <button class="add-folder-button" onclick="addFolder()">
-          Add Folder
-        </button>
-      </div>
-
-      <div id="contextMenu" class="context-menu"></div>
-
-      <script type="module" src="main.js"></script>
-      <script type="module" src="search.js"></script>
-      <script type="module" src="bookmarkIO.js"></script>
-    </div>
-  </body>
+    </body>
 </html>
