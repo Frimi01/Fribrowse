@@ -29,7 +29,9 @@ export function handleDrop(event, targetPath) {
 
 export function moveFolder(sourcePath, targetPath) {
     if (targetPath.join(",").startsWith(sourcePath.join(","))) {
-        console.error("Error: Cannot move a folder into itself or its subfolders.");
+        console.error(
+            "Error: Cannot move a folder into itself or its subfolders.",
+        );
         return;
     }
 

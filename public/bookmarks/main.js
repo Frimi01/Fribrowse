@@ -7,12 +7,12 @@ const bookmarkTree = document.getElementById("bookmarkTree");
 export let renderTree;
 
 (async () => {
-  const bookmarks = await bookmarkManager.getBookmarks();
+    const bookmarks = await bookmarkManager.getBookmarks();
 
-  renderTree = createBookmarksRenderer(bookmarkTree, bookmarks);
-  renderTree.render();
+    renderTree = createBookmarksRenderer(bookmarkTree, bookmarks);
+    renderTree.render();
 })();
 
 export function reinitializeRenderTree(bookmarkTree, bookmarks) {
-  renderTree = createBookmarksRenderer(bookmarkTree, bookmarks);
+    renderTree = createBookmarksRenderer(bookmarkTree, bookmarks);
 }
