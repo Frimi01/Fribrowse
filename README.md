@@ -47,6 +47,7 @@ It's pretty intuitive:
 - To add a bookmark, click add bookmark under folder, imput name and paste URL in the prompts.
 - Drag and drop to rearrange.
 - It will keep the last automatic backups when you open a page or stop the program. You can find them in the backup folder.
+- If you are updating or want store, use or recover bookmarks.json files the intended import/export buttons works the best. 
 
 # ❓ Questions and Answers
 
