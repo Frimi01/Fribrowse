@@ -15,7 +15,6 @@ FriBrowse is a minimalistic, customizable hub for organizing bookmarks, searchin
 2. ~~Add Search Bar for navigating folders.~~
 3. ~~Rewrite backend in go.~~
 4. Make a website ready version of the server that can be deployed and handle multiple users.
-5. Add "Select Root" feature to support workplace-specific configurations.
 
 # 🏗️  Download and Build Instructions
 For a ready-to-use version, visit the [Releases](https://github.com/Frimi01/Fribrowse/releases/) section.
@@ -36,6 +35,18 @@ On linux you should usually be able to build it normally with `go build` if you 
 For further instructions you should try to following the instructions from systray: https://github.com/getlantern/systray
 
 MacOS is untested.
+
+# ⚡ How to use:
+
+It's pretty intuitive:
+
+- Double click executable! (or make program start at startup)
+- Use the tray icon to open the page in your browser or quit
+- Add folders for organizing bookmarks.
+- Right-click folders/bookmarks for options.
+- To add a bookmark, click add bookmark under folder, imput name and paste URL in the prompts.
+- Drag and drop to rearrange.
+- It will keep the last automatic backups when you open a page or stop the program. You can find them in the backup folder.
 
 # ❓ Questions and Answers
 
@@ -59,16 +70,6 @@ Please open an issue describing the problem. Include any relevant details if pos
 - Screenshots
 - Steps to reproduce the bug.
 
-
-**5. How do I use this?**
-
-It's pretty intuitive:
-
-- Add folders for organizing bookmarks.
-- Right-click folders/bookmarks for options.
-- Drag and drop to rearrange.
-- To add a URL, just copy it from your browser and place it where you want.
-
-**6. How do i change the background image?**
+**5. How do i change the background image?**
 
 Replace the image in the public/bookmark folder with the one you want. The image name needs to be exactly the same as the old one! 
