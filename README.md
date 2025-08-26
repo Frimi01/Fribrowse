@@ -14,7 +14,8 @@ FriBrowse is a minimalistic, customizable hub for organizing bookmarks, searchin
 1. ~~Refit the functionality of V1.0 to follow new goals.~~
 2. ~~Add Search Bar for navigating folders.~~
 3. ~~Rewrite backend in go.~~
-4. Make a website ready version of the server that can be deployed and handle multiple users.
+4. Turn into browser extention
+5. Make a website ready version of the server that can be deployed and handle multiple users. (based on V1.2)
 
 # 🏗️  Download and Build Instructions
 For a ready-to-use version, visit the [Releases](https://github.com/Frimi01/Fribrowse/releases/) section.
