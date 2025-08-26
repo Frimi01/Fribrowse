@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "embed"
 	"io"
 	"log"
 	"net/http"
@@ -10,8 +9,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
-
-	"github.com/getlantern/systray"
 )
 
 const (
@@ -20,50 +17,15 @@ const (
 	backupDir     = "./backups"
 )
 
-//go:embed icon.ico
-var iconData []byte
 var stopChan = make(chan os.Signal, 1)
 
 func main() {
-	systray.Run(onReady, onExit)
-}
-
-func onReady() {
-	systray.SetIcon(iconData)
-	systray.SetTitle("Bookmark Server")
-	systray.SetTooltip("Bookmark Server")
-
-	openItem := systray.AddMenuItem("Open in browser", "Launch the web UI")
-	quitItem := systray.AddMenuItem("Quit", "Shut down the server")
-
-	// Start server
 	go startServer()
 
-	// Handle menu clicks
-	go func() {
-		for {
-			select {
-			case <-openItem.ClickedCh:
-				openBrowser("http://localhost" + port)
-			case <-quitItem.ClickedCh:
-				log.Println("Quit requested from tray")
-				stopChan <- os.Interrupt // simulate signal
-			}
-		}
-	}()
-
-	// Setup signal handling
 	signal.Notify(stopChan, os.Interrupt)
-	go func() {
-		<-stopChan
-		log.Println("Shutting down...")
-		backupJSON("lastServerShutdown")
-		systray.Quit()
-	}()
-}
-
-func onExit() {
-	log.Println("Tray app exiting.")
+	<-stopChan
+	log.Println("Shutting down...")
+	backupJSON("lastServerShutdown")
 }
 
 func startServer() {
@@ -134,13 +96,10 @@ func openBrowser(url string) {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "windows":
-		log.Println("Opening Windows browser")
 		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
 	case "darwin":
-		log.Println("Opening macOS browser")
 		cmd = exec.Command("open", url)
 	default:
-		log.Println("Opening Linux browser")
 		cmd = exec.Command("xdg-open", url)
 	}
 	if err := cmd.Start(); err != nil {
