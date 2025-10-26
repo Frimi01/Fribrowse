@@ -1,18 +1,38 @@
 //Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
-import bookmarkManager from "./bookmarkManager.js";
-import createBookmarksRenderer from "./renderer.js";
+import { BookmarkManager } from './core/BookmarkManager.js';
+import { exportBookmarks, importBookmarks, addRootFolder } from './core/BookmarkIO.js';
+import { BookmarkRenderer } from './ui/BookmarkRenderer.js';
+import { handleSearch, clearSearchResults } from './ui/SearchHandler.js';
 
-// Config:
-const bookmarkTree = document.getElementById("bookmarkTree");
-export let renderTree;
+class BookmarkApp {
+    constructor(containerElement) {
+        this.manager = new BookmarkManager();
+        this.renderer = new BookmarkRenderer(containerElement, this.manager);
+    }
 
+    async initialize() {
+        await this.manager.getBookmarks();
+        this.renderer.render();
+    }
+
+    async saveAndRender() {
+        this.manager.sort();
+        await this.manager.saveBookmarksToServer();
+        this.renderer.render();
+    }
+}
+
+// Create singleton app instance
+export const app = new BookmarkApp(document.getElementById("bookmarkTree"));
+
+// Initialize
 (async () => {
-    const bookmarks = await bookmarkManager.getBookmarks();
-
-    renderTree = createBookmarksRenderer(bookmarkTree, bookmarks);
-    renderTree.render();
+    await app.initialize();
 })();
 
-export function reinitializeRenderTree(bookmarkTree, bookmarks) {
-    renderTree = createBookmarksRenderer(bookmarkTree, bookmarks);
-}
+// Expose to window for HTML event handlers
+window.handleSearch = handleSearch;
+window.clearSearchResults = clearSearchResults;
+window.exportBookmarks = exportBookmarks;
+window.importBookmarks = importBookmarks;
+window.addFolder = addRootFolder;

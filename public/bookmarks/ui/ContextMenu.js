@@ -1,15 +1,10 @@
 //Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
+import { app } from '../main.js';
 
-import bookmarkManager from "./bookmarkManager.js";
-import { getFolderByPath, saveAndRender } from "./utils.js";
-
-let currentTarget = null;
+const menu = document.getElementById("contextMenu");
 
 export function showContextMenu(event, type, folderPath, bookmarkIndex = null) {
     event.preventDefault();
-    currentTarget = { type, folderPath, bookmarkIndex };
-
-    const menu = document.getElementById("contextMenu");
 
     const actions = {
         folder: [
@@ -54,30 +49,17 @@ document.addEventListener("click", () => {
 function addSubFolder(folderPath) {
     const name = prompt("Enter folder name:");
     if (!name) return;
-
-    let targetFolder = getFolderByPath(folderPath);
-    if (!targetFolder || !targetFolder.folders) {
-        console.error("Target folder not found.");
-        return;
-    }
-
-    targetFolder.folders.push({
-        name,
-        folders: [],
-        bookmarks: [],
-        open: false,
-    });
-    saveAndRender();
+    app.manager.addFolder(name, folderPath)
+    app.saveAndRender();
 }
 
 function renameFolder(folderPath) {
-    let folder = getFolderByPath(folderPath);
+    const folder = app.manager.getFolderByPath(folderPath);
     if (!folder) return console.error("Error: Folder not found.");
-
     const name = prompt("Enter new folder name:", folder.name);
     if (name) {
-        folder.name = name;
-        saveAndRender();
+        app.manager.renameFolder(folderPath, name);
+        app.saveAndRender();
     }
 }
 
@@ -85,61 +67,38 @@ function addBookmark(folderPath) {
     const name = prompt("Enter bookmark name:");
     const url = prompt("Enter bookmark URL:");
     if (!name || !url) return;
-
-    const targetFolder = getFolderByPath(folderPath);
-    if (!targetFolder || !targetFolder.bookmarks) {
-        console.error("Error: Could not find target folder!");
-        return;
-    }
-
-    targetFolder.bookmarks.push({ name, url });
-    saveAndRender();
+    app.manager.addBookmark(folderPath, name, url);
+    app.saveAndRender();
 }
 
 function renameBookmark(folderPath, bookmarkIndex) {
-    updateBookmark("name", folderPath, bookmarkIndex);
+    const folder = app.manager.getFolderByPath(folderPath);
+    if (!folder || !folder.bookmarks[bookmarkIndex]) return console.error("Error: Bookmark not found.");
+    const newValue = prompt("Enter new bookmark name:", folder.bookmarks[bookmarkIndex].name);
+    if (newValue) {
+        app.manager.updateBookmark(folderPath, bookmarkIndex, "name", newValue);
+        app.saveAndRender();
+    }
 }
 
 function editBookmarkUrl(folderPath, bookmarkIndex) {
-    updateBookmark("url", folderPath, bookmarkIndex);
+    const folder = app.manager.getFolderByPath(folderPath);
+    if (!folder || !folder.bookmarks[bookmarkIndex]) return console.error("Error: Bookmark not found.");
+    const newValue = prompt("Enter new bookmark URL:", folder.bookmarks[bookmarkIndex].url);
+    if (newValue) {
+        app.manager.updateBookmark(folderPath, bookmarkIndex, "url", newValue);
+        app.saveAndRender();
+    }
 }
 
-function updateBookmark(property, folderPath, bookmarkIndex) {
-    const folder = getFolderByPath(folderPath);
-    if (!folder || !folder.bookmarks[bookmarkIndex]) {
-        return console.error("Error: Bookmark not found.");
-    }
-    const currentValue = folder.bookmarks[bookmarkIndex][property];
-    const newValue = prompt(`Enter new bookmark ${property}:`, currentValue);
-    if (newValue !== null && newValue !== "") {
-        folder.bookmarks[bookmarkIndex][property] = newValue;
-        saveAndRender();
-    }
-}
 function deleteFolder(folderPath) {
     if (!confirm("Are you sure you want to delete this folder?")) return;
-
-    let parentPath = [...folderPath];
-    let folderIndex = parentPath.pop();
-
-    let parentFolder = getFolderByPath(parentPath);
-
-    if (parentFolder) {
-        parentFolder.folders.splice(folderIndex, 1);
-    } else {
-        bookmarkManager.bookmarks.splice(folderIndex, 1);
-    }
-
-    saveAndRender();
+    app.manager.deleteFolder(folderPath);
+    app.saveAndRender();
 }
 
 function deleteBookmark(folderPath, bookmarkIndex) {
     if (!confirm("Are you sure you want to delete this bookmark?")) return;
-
-    const folder = getFolderByPath(folderPath);
-    if (!folder || !folder.bookmarks[bookmarkIndex])
-        return console.error("Error: Bookmark not found.");
-
-    folder.bookmarks.splice(bookmarkIndex, 1);
-    saveAndRender();
+    app.manager.deleteBookmark(folderPath, bookmarkIndex);
+    app.saveAndRender();
 }

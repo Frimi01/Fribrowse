@@ -26,14 +26,16 @@
                             Import
                         </button>
                         <div class="searchbar">
-                            <input
-                                type="text"
-                                class="search-bar"
-                                placeholder="Search.."
-                                oninput="handleSearch(this.value)"
-                                onclick="handleSearch(this.value)"
-                                onblur="setTimeout(clearSearchResults, 200)"
-                            />
+                            <label>
+                                <input
+                                    type="text"
+                                    class="search-bar"
+                                    placeholder="Search.."
+                                    oninput="handleSearch(this.value)"
+                                    onclick="handleSearch(this.value)"
+                                    onblur="setTimeout(clearSearchResults, 200)"
+                                />
+                            </label>
                             <div
                                 id="searchBarResultsDropdown"
                                 class="search-bar-results-dropdown"
@@ -51,8 +53,6 @@
             <div id="contextMenu" class="context-menu"></div>
 
             <script type="module" src="main.js"></script>
-            <script type="module" src="search.js"></script>
-            <script type="module" src="bookmarkIO.js"></script>
         </div>
     </body>
 </html>

@@ -1,6 +1,5 @@
 //Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
-import { saveAndRender } from "./utils.js";
-import bookmarkManager from "./bookmarkManager.js";
+import { app } from '../main.js';
 
 const searchInput = document.querySelector(".search-bar");
 const searchResultsDropdown = document.getElementById(
@@ -8,7 +7,7 @@ const searchResultsDropdown = document.getElementById(
 );
 let highlightedElement = null;
 
-function handleSearch(searchTerm) {
+export function handleSearch(searchTerm) {
     searchResultsDropdown.innerHTML = "";
     highlightedElement?.classList?.remove("highlighted-search-result");
 
@@ -17,7 +16,7 @@ function handleSearch(searchTerm) {
         return;
     }
 
-    const results = findSearchResults(bookmarkManager.bookmarks, searchTerm);
+    const results = findSearchResults(app.manager.bookmarks, searchTerm);
 
     if (results.length > 0) {
         results.forEach((result) => {
@@ -41,7 +40,7 @@ function handleSearch(searchTerm) {
 function findurl(result) {
     const path = result.path;
     let targetBookmark;
-    let cbookmark = bookmarkManager.bookmarks;
+    let cbookmark = app.manager.bookmarks;
     for (let i = 0; i < path.length - 1; i++) {
         const segment = path[i];
         if (
@@ -119,7 +118,7 @@ function highlightInTree(path) {
     }
 
     let elementToHighlight = bookmarkTree;
-    let currentLevel = bookmarkManager.bookmarks;
+    let currentLevel = app.manager.bookmarks;
 
     for (let i = 0; i < path.length; i++) {
         const segment = path[i];
@@ -179,7 +178,7 @@ function handleSearchResultClick(result) {
 
     function openParents() {
         const path = result.path;
-        let cbookmark = bookmarkManager.bookmarks;
+        let cbookmark = app.manager.bookmarks;
 
         for (let i = 0; i < path.length - 1; i++) {
             const segment = path[i];
@@ -230,16 +229,16 @@ function handleSearchResultClick(result) {
             }
         } else if (!result.type === "bookmark") {
             console.error(
-                "Unknown result type for the last segment:",
+                "Error: Unknown result type for the last segment:",
                 result.type,
                 path,
             );
         }
     }
-    saveAndRender();
+    app.saveAndRender();
 }
 
-function clearSearchResults() {
+export function clearSearchResults() {
     setTimeout(() => {
         if (!searchInput.matches(":focus")) {
             searchResultsDropdown.style.display = "none";
@@ -252,6 +251,3 @@ function clearSearchResults() {
         }
     }, 100);
 }
-
-window.handleSearch = handleSearch;
-window.clearSearchResults = clearSearchResults;

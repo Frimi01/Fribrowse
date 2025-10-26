@@ -1,34 +1,36 @@
 //Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
-import {
-    handleDragStart,
-    handleDragOver,
-    handleDrop,
-} from "./draggableLogic.js";
-import { getFolderByPath, saveAndRender } from "./utils.js";
-import { showContextMenu } from "./contextMenu.js";
+import { handleDragStart, handleDragOver, handleDrop } from "./DragHandler.js";
+import { showContextMenu } from "./ContextMenu.js";
 
-export default function createBookmarksRenderer(bookmarkTree, bookmarks) {
-    function render() {
-        bookmarkTree.innerHTML = "";
+export class BookmarkRenderer {
+    constructor(containerElement, manager) {
+        this.container = containerElement;
+        this.manager = manager;
+    }
 
-        bookmarks.forEach((folder, index) => {
-            renderFolder(folder, [index], bookmarkTree);
+    render() {
+        this.container.innerHTML = "";
+        this.manager.bookmarks.forEach((folder, index) => {
+            this.renderFolder(folder, [index], this.container);
         });
     }
 
-    function renderFolder(folder, folderPath, parentElement) {
-        const folderElement = createFolderElement(folder, folderPath);
-
+    renderFolder(folder, folderPath, parentElement) {
+        const folderElement = this.createFolderElement(folder, folderPath);
         const folderContent = document.createElement("ul");
         folderContent.className = "folder-content";
         folderContent.style.display = folder.open ? "block" : "none";
 
         folder.folders?.forEach((subFolder, fIndex) => {
-            renderFolder(subFolder, [...folderPath, fIndex], folderContent);
+            this.renderFolder(
+                subFolder,
+                [...folderPath, fIndex],
+                folderContent,
+            );
         });
 
         folder.bookmarks?.forEach((bookmark, bIndex) => {
-            const bookmarkEl = createBookmarkElement(
+            const bookmarkEl = this.createBookmarkElement(
                 bookmark,
                 folderPath,
                 bIndex,
@@ -40,13 +42,18 @@ export default function createBookmarksRenderer(bookmarkTree, bookmarks) {
         parentElement.appendChild(folderElement);
     }
 
-    function createFolderElement(folder, folderPath) {
+    createFolderElement(folder, folderPath) {
         const folderElement = document.createElement("li");
-
         const folderName = document.createElement("span");
+
         folderName.classList.add("folder");
         folderName.textContent = `📁 ${folder.name}`;
-        folderName.onclick = () => toggleFolder(folderPath);
+
+        folderName.onclick = () => {
+            this.manager.toggleFolder(folderPath);
+            this.render();
+        };
+
         folderName.oncontextmenu = (event) =>
             showContextMenu(event, "folder", folderPath);
 
@@ -60,7 +67,7 @@ export default function createBookmarksRenderer(bookmarkTree, bookmarks) {
         return folderElement;
     }
 
-    function createBookmarkElement(bookmark, folderPath, bIndex) {
+    createBookmarkElement(bookmark, folderPath, bIndex) {
         const bookmarkElement = document.createElement("li");
         bookmarkElement.classList.add("bookmark");
 
@@ -70,7 +77,6 @@ export default function createBookmarksRenderer(bookmarkTree, bookmarks) {
         bookmarkLink.textContent = `🔗 ${bookmark.name}`;
 
         bookmarkElement.appendChild(bookmarkLink);
-
         bookmarkElement.oncontextmenu = (event) =>
             showContextMenu(event, "bookmark", folderPath, bIndex);
 
@@ -82,14 +88,4 @@ export default function createBookmarksRenderer(bookmarkTree, bookmarks) {
 
         return bookmarkElement;
     }
-
-    return { render };
-}
-
-function toggleFolder(folderPath) {
-    const folder = getFolderByPath(folderPath);
-    if (!folder) return console.error("Folder not found:", folderPath);
-
-    folder.open = !folder.open;
-    saveAndRender();
 }
