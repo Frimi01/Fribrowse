@@ -1,61 +1,92 @@
 //Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 export class BookmarkManager {
-    constructor(serveruri = prompt("Enter serveruri:")) {
-        this.serveruri = serveruri;
+    constructor(
+        serveruri = prompt("Enter CouchDB URL (e.g. http://localhost:5984):"),
+        username = prompt("Enter username:"),
+        password = prompt("Enter password:")
+    ) {
+        this.serveruri = serveruri.replace(/\/$/, "");
+        this.username = username;
+        this.password = password;
+        this.dbname = "fribrowsedb";
         this.bookmarks = [];
         this.saving = false;
         this.pendingSave = false;
     }
 
-    // Saving and loading bookmarks from server
+    async couchFetch(path, options = {}) {
+        const auth = btoa(`${this.username}:${this.password}`);
+        const url = `${this.serveruri}/${path}`;
+        return fetch(url, {
+            ...options,
+            headers: {
+                "Authorization": `Basic ${auth}`,
+                "Content-Type": "application/json",
+                ...(options.headers || {}),
+            },
+        });
+    }
 
+    // Load all bookmarks (just one document)
     async getBookmarks() {
         try {
-            const response = await fetch(`${this.serveruri}/get-bookmarks`, {
-                method: "GET",
-                mode: "cors",
-            });
-            if (!response.ok) throw new Error("Failed to fetch bookmarks");
-
-            this.bookmarks = await response.json();
+            const res = await this.couchFetch(`${this.dbname}/bookmarks`);
+            if (res.status === 404) {
+                console.log("No bookmarks found in database.");
+                this.bookmarks = [];
+                return this.bookmarks;
+            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const doc = await res.json();
+            this._rev = doc._rev; // store the current revision for updates
+            this.bookmarks = doc.data || [];
+            console.log("Loaded bookmarks:", this.bookmarks);
             return this.bookmarks;
-        } catch (error) {
-            console.error("Error loading bookmarks:", error);
+        } catch (err) {
+            console.error("Error loading bookmarks:", err);
             this.bookmarks = [];
             return [];
         }
     }
 
+    // Save bookmarks (overwrite the single document)
     async saveBookmarksToServer() {
         if (this.saving) {
             this.pendingSave = true;
             return;
         }
-
         this.saving = true;
 
-        while (true) {
-            try {
-                await fetch(`${this.serveruri}/save-json`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(this.bookmarks),
-                });
-                console.log("Bookmarks saved successfully!");
-                break;
-            } catch (error) {
-                console.error("Failed to save bookmarks:", error);
-                const retry = confirm(
-                    "Failed to reach server. Try starting the server and save again. Do you wish to retry?",
-                );
-                if (!retry) {
-                    break;
+        try {
+            // Get current rev if not loaded
+            if (!this._rev) {
+                const res = await this.couchFetch(`${this.dbname}/bookmarks`);
+                if (res.ok) {
+                    const doc = await res.json();
+                    this._rev = doc._rev;
                 }
             }
+
+            const res = await this.couchFetch(`${this.dbname}/bookmarks`, {
+                method: "PUT",
+                body: JSON.stringify({
+                    _id: "bookmarks",
+                    _rev: this._rev,
+                    data: this.bookmarks,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(JSON.stringify(data));
+
+            this._rev = data.rev; // update stored revision
+            console.log("Bookmarks saved successfully!");
+        } catch (error) {
+            console.error("Failed to save bookmarks:", error);
+            alert("Failed to save bookmarks. Check your CouchDB connection.");
         }
 
         this.saving = false;
-
         if (this.pendingSave) {
             this.pendingSave = false;
             await this.saveBookmarksToServer();
