@@ -20,18 +20,18 @@ export function importBookmarks(event) {
     reader.onload = async function (e) {
         try {
             app.manager.bookmarks = JSON.parse(e.target.result);
-            app.saveAndRender();
+            await app.saveAndRender();
         } catch (err) {
-            return console.error("Failed toimport bookmarks:", err);
+            return console.error("Failed to import bookmarks:", err);
         }
     };
     reader.readAsText(file);
 }
 
-export function addRootFolder() {
+export async function addRootFolder() {
     const name = prompt("Enter folder name:");
     if (name) {
         app.manager.addFolder(name);
-        app.saveAndRender();
+        await app.saveAndRender();
     }
 }

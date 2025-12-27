@@ -13,7 +13,7 @@ export function handleDragOver(event) {
     event.preventDefault();
 }
 
-export function handleDrop(event, targetPath) {
+export async function handleDrop(event, targetPath) {
     event.preventDefault();
 
     const type = event.dataTransfer.getData("type");
@@ -21,12 +21,12 @@ export function handleDrop(event, targetPath) {
 
     if (type === "folder") {
         if (app.manager.moveFolder(sourcePath, targetPath)) {
-            app.saveAndRender();
+            await app.saveAndRender();
         }
     } else if (type === "bookmark") {
         const bookmarkIndex = event.dataTransfer.getData("bookmarkIndex");
         if (app.manager.moveBookmark(sourcePath, bookmarkIndex, targetPath)) {
-            app.saveAndRender();
+            await app.saveAndRender();
         }
 
     }

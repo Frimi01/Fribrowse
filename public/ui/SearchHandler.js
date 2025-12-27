@@ -171,7 +171,7 @@ function highlightInTree(path) {
     }
 }
 
-function handleSearchResultClick(result) {
+async function handleSearchResultClick(result) {
     searchResultsDropdown.style.display = "none";
 
     openParents();
@@ -235,7 +235,7 @@ function handleSearchResultClick(result) {
             );
         }
     }
-    app.saveAndRender();
+    await app.saveAndRender();
 }
 
 export function clearSearchResults() {
