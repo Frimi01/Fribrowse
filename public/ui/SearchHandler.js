@@ -111,41 +111,46 @@ function highlightMatch(text, searchTerm) {
     return text.replace(regex, '<span class="highlight">$&</span>');
 }
 
-function highlightInTree(path) {
+function highlightInTree(path, root = document.getElementById("bookmarkTree") || document.querySelector(".bookmark-tree")) {
     // Remove previous highlight
     if (highlightedElement) {
         highlightedElement.classList.remove("highlighted-search-result");
+        highlightedElement = null;
     }
 
-    let elementToHighlight = bookmarkTree;
+    if (!root) {
+        console.warn("highlightInTree: bookmark tree root not found");
+        return;
+    }
+
+    let elementToHighlight = root;
     let currentLevel = app.manager.bookmarks;
 
     for (let i = 0; i < path.length; i++) {
         const segment = path[i];
-        // console.log(segment, elementToHighlight);
 
         if (
             typeof segment === "number" &&
             currentLevel &&
             currentLevel[segment]
         ) {
+            // guard DOM accesses
+            if (!elementToHighlight || !elementToHighlight.children || !elementToHighlight.children[segment]) {
+                elementToHighlight = null;
+                break;
+            }
             elementToHighlight = elementToHighlight.children[segment];
+
             if (currentLevel[segment].folders) {
                 currentLevel = currentLevel[segment].folders;
             } else {
                 currentLevel = null;
             }
         } else if (segment === "folders" && elementToHighlight) {
-            elementToHighlight =
-                elementToHighlight.querySelector(".folder-content");
+            elementToHighlight = elementToHighlight.querySelector(".folder-content") || null;
         } else if (segment === "bookmarks" && elementToHighlight) {
-            const folderContent =
-                elementToHighlight.querySelector(".folder-content");
-            const bookmarks = folderContent
-                ? Array.from(
-                      folderContent.querySelectorAll(":scope > .bookmark"),
-                  )
-                : [];
+            const folderContent = elementToHighlight.querySelector(".folder-content");
+            const bookmarks = folderContent ? Array.from(folderContent.querySelectorAll(":scope > .bookmark")) : [];
             const bookmarkIndex = path[i + 1]; // lookahead to get the index
             if (typeof bookmarkIndex === "number" && bookmarks[bookmarkIndex]) {
                 elementToHighlight = bookmarks[bookmarkIndex];
@@ -154,6 +159,9 @@ function highlightInTree(path) {
                 elementToHighlight = null;
                 break;
             }
+        } else {
+            elementToHighlight = null;
+            break;
         }
 
         if (!elementToHighlight) break;
@@ -161,8 +169,8 @@ function highlightInTree(path) {
 
     if (elementToHighlight) {
         const target =
-            elementToHighlight.querySelector(".folder") ||
-            elementToHighlight.querySelector("a") ||
+            elementToHighlight.querySelector?.(".folder") ||
+            elementToHighlight.querySelector?.("a") ||
             elementToHighlight;
         if (target) {
             target.classList.add("highlighted-search-result");
@@ -227,7 +235,7 @@ async function handleSearchResultClick(result) {
             } else {
                 console.error("Invalid target folder at end of path:", path);
             }
-        } else if (!result.type === "bookmark") {
+        } else if (result.type !== "bookmark") {
             console.error(
                 "Error: Unknown result type for the last segment:",
                 result.type,
