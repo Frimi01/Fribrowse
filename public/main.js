@@ -1,4 +1,4 @@
-//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
+//GitHub (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import { BookmarkManager } from './core/BookmarkManager.js';
 import { exportBookmarks, importBookmarks, addRootFolder } from './core/BookmarkIO.js';
 import { BookmarkRenderer } from './ui/BookmarkRenderer.js';

@@ -1,4 +1,4 @@
-//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
+//GitHub (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 export class BookmarkManager {
     constructor(
         serveruri = prompt("Enter CouchDB URL (e.g. http://localhost:5984):"),

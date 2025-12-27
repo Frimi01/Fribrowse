@@ -1,4 +1,4 @@
-//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
+//GitHub (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import { handleDragStart, handleDragOver, handleDrop } from "./DragHandler.js";
 import { showContextMenu } from "./ContextMenu.js";
 

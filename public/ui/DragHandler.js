@@ -1,4 +1,4 @@
-//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
+//GitHub (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import { app } from "../main.js";
 
 export function handleDragStart(event, type, folderPath, bookmarkIndex = null) {
