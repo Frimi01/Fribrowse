@@ -1,6 +1,5 @@
 //GitHub (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 export class BookmarkManager {
-// Saving - false, pendingsave - false, bookmarks [], api key?
     constructor(api = "/api") {
         this.api = api;
         this.bookmarks = [];
