@@ -6,20 +6,7 @@ export class BookmarkManager {
         this.saving = false;
         this.pendingSave = false;
     }
-    async couchFetch(path, options = {}) {
-        const auth = btoa(`${this.username}:${this.password}`);
-        const url = `${this.serveruri}/${path}`;
-        return fetch(url, {
-            ...options,
-            headers: {
-                "Authorization": `Basic ${auth}`,
-                "Content-Type": "application/json",
-                ...(options.headers || {}),
-            },
-        });
-    }
 
-    // Load all bookmarks (just one document)
     async getBookmarks() {
         try {
             const res = await fetch(`${this.api}/bookmarks`);
@@ -52,13 +39,6 @@ export class BookmarkManager {
             console.error("Failed to save bookmarks:", err);
             alert("Failed to save bookmarks.");
         }
-
-        this.saving = false;
-        if (this.pendingSave) {
-            this.pendingSave = false;
-            await this.saveBookmarksToServer();
-        }
-    }
 
         this.saving = false;
         if (this.pendingSave) {
