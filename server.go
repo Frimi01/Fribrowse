@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -21,6 +22,12 @@ const (
 	backupDir         = "./backups"
 	maxRequestBodyMB  = 10
 	shutdownTimeout   = 5 * time.Second
+)
+
+const (
+	logInfo  = "[INFO]  "
+	logError = "[ERROR] "
+	logDebug = "[DEBUG] "
 )
 
 type BookmarkStore interface {
@@ -35,13 +42,27 @@ type JSONStore struct {
 func (s *JSONStore) Load() ([]byte, error) {
 	data, err := os.ReadFile(s.path)
 	if os.IsNotExist(err) {
+		log.Printf("%sJSON file not found, returning empty array", logInfo)
 		return []byte("[]"), nil
 	}
+	if err != nil {
+		log.Printf("%sFailed to read JSON file: %v", logError, err)
+		return nil, err
+	}
+	
+	log.Printf("%sLoaded %d bytes from JSON file", logDebug, len(data))
 	return data, err
 }
 
 func (s *JSONStore) Save(data []byte) error {
-	return os.WriteFile(s.path, data, 0644)
+	err := os.WriteFile(s.path, data, 0644)
+	if err != nil {
+		log.Printf("%sFailed to write JSON file: %v", logError, err)
+		return err
+	}
+	
+	log.Printf("%sSaved %d bytes to JSON file", logInfo, len(data))
+	return nil
 }
 
 type CouchStore struct {
@@ -70,6 +91,7 @@ func (c *CouchStore) getLatestRev() (string, error) {
 		nil,
 	)
 	if err != nil {
+		log.Printf("%sFailed to create HEAD request: %v", logError, err)
 		return "", err
 	}
 
@@ -77,21 +99,28 @@ func (c *CouchStore) getLatestRev() (string, error) {
 
 	res, err := c.client.Do(req)
 	if err != nil {
+		log.Printf("%sCouchDB HEAD request failed: %v", logError, err)
 		return "", err
 	}
 	defer res.Body.Close()
 
+	log.Printf("%sCouchDB HEAD /bookmarks - Status: %d", logDebug, res.StatusCode)
+
 	if res.StatusCode == http.StatusNotFound {
+		log.Printf("%sNo existing document found in CouchDB", logDebug)
 		return "", nil
 	}
 
 	etag := res.Header.Get("ETag")
 	if etag == "" {
+		log.Printf("%sNo ETag in CouchDB response", logDebug)
 		return "", nil
 	}
 
 	// Remove quotes from ETag
-	return etag[1 : len(etag)-1], nil
+	rev := etag[1 : len(etag)-1]
+	log.Printf("%sRetrieved revision: %s", logDebug, rev)
+	return rev, nil
 }
 
 func (c *CouchStore) Load() ([]byte, error) {
@@ -101,6 +130,7 @@ func (c *CouchStore) Load() ([]byte, error) {
 		nil,
 	)
 	if err != nil {
+		log.Printf("%sFailed to create GET request: %v", logError, err)
 		return nil, err
 	}
 
@@ -108,21 +138,27 @@ func (c *CouchStore) Load() ([]byte, error) {
 
 	res, err := c.client.Do(req)
 	if err != nil {
+		log.Printf("%sCouchDB GET request failed: %v", logError, err)
 		return nil, err
 	}
 	defer res.Body.Close()
 
+	log.Printf("%sCouchDB GET /bookmarks - Status: %d", logDebug, res.StatusCode)
+
 	if res.StatusCode == http.StatusNotFound {
+		log.Printf("%sNo bookmarks document in CouchDB, returning empty array", logInfo)
 		return []byte("[]"), nil
 	}
 
 	if res.StatusCode >= 300 {
 		body, _ := io.ReadAll(res.Body)
+		log.Printf("%sCouchDB GET failed - Status: %d, Error: %s", logError, res.StatusCode, strings.TrimSpace(string(body)))
 		return nil, fmtError(res.Status, body)
 	}
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
+		log.Printf("%sFailed to read CouchDB response: %v", logError, err)
 		return nil, err
 	}
 
@@ -131,9 +167,11 @@ func (c *CouchStore) Load() ([]byte, error) {
 	}
 
 	if err := json.Unmarshal(body, &doc); err != nil {
+		log.Printf("%sFailed to parse CouchDB document: %v", logError, err)
 		return nil, err
 	}
 
+	log.Printf("%sLoaded %d bytes from CouchDB", logDebug, len(doc.Data))
 	return doc.Data, nil
 }
 
@@ -141,6 +179,7 @@ func (c *CouchStore) Save(data []byte) error {
 	// Get the latest revision before saving
 	rev, err := c.getLatestRev()
 	if err != nil {
+		log.Printf("%sFailed to get latest revision: %v", logError, err)
 		return fmt.Errorf("failed to get latest revision: %w", err)
 	}
 
@@ -155,6 +194,7 @@ func (c *CouchStore) Save(data []byte) error {
 
 	buf, err := json.Marshal(payload)
 	if err != nil {
+		log.Printf("%sFailed to marshal CouchDB payload: %v", logError, err)
 		return err
 	}
 
@@ -164,6 +204,7 @@ func (c *CouchStore) Save(data []byte) error {
 		bytes.NewReader(buf),
 	)
 	if err != nil {
+		log.Printf("%sFailed to create PUT request: %v", logError, err)
 		return err
 	}
 
@@ -172,15 +213,20 @@ func (c *CouchStore) Save(data []byte) error {
 
 	res, err := c.client.Do(req)
 	if err != nil {
+		log.Printf("%sCouchDB PUT request failed: %v", logError, err)
 		return err
 	}
 	defer res.Body.Close()
 
+	log.Printf("%sCouchDB PUT /bookmarks - Status: %d", logDebug, res.StatusCode)
+
 	if res.StatusCode >= 300 {
 		body, _ := io.ReadAll(res.Body)
+		log.Printf("%sCouchDB PUT failed - Status: %d, Error: %s", logError, res.StatusCode, strings.TrimSpace(string(body)))
 		return fmtError(res.Status, body)
 	}
 
+	log.Printf("%sSaved %d bytes to CouchDB", logInfo, len(data))
 	return nil
 }
 
@@ -191,6 +237,7 @@ func (c *CouchStore) ensureDatabase() error {
 		nil,
 	)
 	if err != nil {
+		log.Printf("%sFailed to create database creation request: %v", logError, err)
 		return err
 	}
 
@@ -198,17 +245,27 @@ func (c *CouchStore) ensureDatabase() error {
 
 	res, err := c.client.Do(req)
 	if err != nil {
+		log.Printf("%sCouchDB database creation request failed: %v", logError, err)
 		return err
 	}
 	defer res.Body.Close()
 
-	// 201 = created, 412 = already exists (both are fine)
-	if res.StatusCode != http.StatusCreated && res.StatusCode != http.StatusPreconditionFailed {
-		body, _ := io.ReadAll(res.Body)
-		return fmtError(res.Status, body)
-	}
+	log.Printf("%sCouchDB PUT /%s - Status: %d", logDebug, c.dbName, res.StatusCode)
 
-	return nil
+	// 201 = created, 412 = already exists (both are fine)
+	if res.StatusCode == http.StatusCreated {
+		log.Printf("%sCreated CouchDB database: %s", logInfo, c.dbName)
+		return nil
+	}
+	
+	if res.StatusCode == http.StatusPreconditionFailed {
+		log.Printf("%sCouchDB database already exists: %s", logInfo, c.dbName)
+		return nil
+	}
+	
+	body, _ := io.ReadAll(res.Body)
+	log.Printf("%sFailed to create database - Status: %d, Error: %s", logError, res.StatusCode, strings.TrimSpace(string(body)))
+	return fmtError(res.Status, body)
 }
 
 func main() {
@@ -230,22 +287,23 @@ func main() {
 			os.Getenv("COUCH_DB"),
 		)
 		
-		log.Println("Using CouchDB storage")
-		log.Println("Ensuring database exists...")
+		log.Printf("%sUsing CouchDB storage", logInfo)
+		log.Printf("%sEnsuring database exists...", logInfo)
 		if err := couchStore.ensureDatabase(); err != nil {
-			log.Fatalf("Failed to ensure CouchDB database exists: %v", err)
+			log.Fatalf("%sFailed to ensure CouchDB database exists: %v", logError, err)
 		}
 		
 		store = couchStore
 	} else {
 		store = &JSONStore{path: bookmarksFile}
-		log.Println("Using JSON file storage")
+		log.Printf("%sUsing JSON file storage", logInfo)
 		
 		// Initialize empty file if it doesn't exist
 		if _, err := os.Stat(bookmarksFile); os.IsNotExist(err) {
 			if err := os.WriteFile(bookmarksFile, []byte("[]"), 0644); err != nil {
-				log.Fatalf("Failed to create bookmarks file: %v", err)
+				log.Fatalf("%sFailed to create bookmarks file: %v", logError, err)
 			}
+			log.Printf("%sCreated new bookmarks file", logInfo)
 		}
 	}
 
@@ -256,7 +314,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt)
 	<-stop
 
-	log.Println("Shutting down gracefully...")
+	log.Printf("%sShutdown signal received, shutting down gracefully...", logInfo)
 	
 	// Create backup before shutdown
 	if os.Getenv("STORE") != "couchdb" {
@@ -268,10 +326,10 @@ func main() {
 	defer cancel()
 	
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("Server shutdown error: %v", err)
+		log.Printf("%sServer shutdown error: %v", logError, err)
 	}
 	
-	log.Println("Server stopped")
+	log.Printf("%sServer stopped", logInfo)
 }
 
 func startServer(store BookmarkStore, port string) *http.Server {
@@ -295,7 +353,7 @@ func startServer(store BookmarkStore, port string) *http.Server {
 
 	mux.Handle("/", http.FileServer(http.Dir("./public")))
 	mux.HandleFunc("/api/bookmarks", corsMiddleware(bookmarksHandler(store)))
-	mux.HandleFunc("/health", healthCheckHandler())
+	mux.HandleFunc("/api/health", healthCheckHandler())
 
 	srv := &http.Server{
 		Addr:    port,
@@ -303,9 +361,9 @@ func startServer(store BookmarkStore, port string) *http.Server {
 	}
 
 	go func() {
-		log.Printf("Server running on http://localhost%s", port)
+		log.Printf("%sServer running on http://localhost%s", logInfo, port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+			log.Fatalf("%sServer failed to start: %v", logError, err)
 		}
 	}()
 
@@ -337,30 +395,36 @@ func bookmarksHandler(store BookmarkStore) http.HandlerFunc {
 }
 
 func handleGetBookmarks(store BookmarkStore, w http.ResponseWriter, r *http.Request) {
+	log.Printf("%sGET /bookmarks", logDebug)
+	
 	data, err := store.Load()
 	if err != nil {
-		log.Printf("Error loading bookmarks: %v", err)
+		log.Printf("%sFailed to load bookmarks: %v", logError, err)
 		http.Error(w, "Failed to load bookmarks", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)
+	log.Printf("%sGET /bookmarks - Status: 200, Size: %d bytes", logInfo, len(data))
 }
 
 func handleSaveBookmarks(store BookmarkStore, w http.ResponseWriter, r *http.Request) {
+	log.Printf("%s%s /bookmarks", logDebug, r.Method)
+	
 	// Limit request body size
 	r.Body = http.MaxBytesReader(w, r.Body, maxRequestBodyMB*1024*1024)
 	
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("Error reading request body: %v", err)
+		log.Printf("%sFailed to read request body: %v", logError, err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	// Validate JSON
 	if !json.Valid(body) {
+		log.Printf("%sInvalid JSON in request body", logError)
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
@@ -371,22 +435,26 @@ func handleSaveBookmarks(store BookmarkStore, w http.ResponseWriter, r *http.Req
 	}
 
 	if err := store.Save(body); err != nil {
-		log.Printf("Error saving bookmarks: %v", err)
+		log.Printf("%sFailed to save bookmarks: %v", logError, err)
 		http.Error(w, "Failed to save bookmarks", http.StatusInternalServerError)
 		return
 	}
 
-	log.Println("Bookmarks saved successfully")
 	w.WriteHeader(http.StatusNoContent)
+	log.Printf("%s%s /bookmarks - Status: 204, Size: %d bytes", logInfo, r.Method, len(body))
 }
 
 func backupJSON(label string) {
 	if _, err := os.Stat(bookmarksFile); err != nil {
+		log.Printf("%sNo bookmarks file to backup", logDebug)
 		return
 	}
 
 	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
-		_ = os.MkdirAll(backupDir, 0755)
+		if err := os.MkdirAll(backupDir, 0755); err != nil {
+			log.Printf("%sFailed to create backup directory: %v", logError, err)
+			return
+		}
 	}
 
 	timestamp := time.Now().Format("2006-01-02_15-04-05")
@@ -394,16 +462,16 @@ func backupJSON(label string) {
 
 	data, err := os.ReadFile(bookmarksFile)
 	if err != nil {
-		log.Printf("Backup failed (read): %v", err)
+		log.Printf("%sBackup failed (read): %v", logError, err)
 		return
 	}
 
 	if err := os.WriteFile(dst, data, 0644); err != nil {
-		log.Printf("Backup failed (write): %v", err)
+		log.Printf("%sBackup failed (write): %v", logError, err)
 		return
 	}
 
-	log.Printf("Backup created: %s", dst)
+	log.Printf("%sBackup created: %s (%d bytes)", logInfo, filepath.Base(dst), len(data))
 }
 
 func fmtError(status string, body []byte) error {
