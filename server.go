@@ -294,8 +294,7 @@ func startServer(store BookmarkStore, port string) *http.Server {
 	}
 
 	mux.Handle("/", http.FileServer(http.Dir("./public")))
-	mux.HandleFunc("/get-bookmarks", corsMiddleware(getBookmarksHandler(store)))
-	mux.HandleFunc("/save-json", corsMiddleware(saveBookmarksHandler(store)))
+	mux.HandleFunc("/api/bookmarks", corsMiddleware(bookmarksHandler(store)))
 	mux.HandleFunc("/health", healthCheckHandler())
 
 	srv := &http.Server{
@@ -324,52 +323,61 @@ func healthCheckHandler() http.HandlerFunc {
 	}
 }
 
-func getBookmarksHandler(store BookmarkStore) http.HandlerFunc {
+func bookmarksHandler(store BookmarkStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := store.Load()
-		if err != nil {
-			log.Printf("Error loading bookmarks: %v", err)
-			http.Error(w, "Failed to load bookmarks", http.StatusInternalServerError)
-			return
+		switch r.Method {
+		case "GET":
+			handleGetBookmarks(store, w, r)
+		case "POST", "PUT":
+			handleSaveBookmarks(store, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(data)
 	}
 }
 
-func saveBookmarksHandler(store BookmarkStore) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Limit request body size
-		r.Body = http.MaxBytesReader(w, r.Body, maxRequestBodyMB*1024*1024)
-		
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			log.Printf("Error reading request body: %v", err)
-			http.Error(w, "Invalid request body", http.StatusBadRequest)
-			return
-		}
-
-		// Validate JSON
-		if !json.Valid(body) {
-			http.Error(w, "Invalid JSON", http.StatusBadRequest)
-			return
-		}
-
-		// Create backup before save (JSON only)
-		if _, ok := store.(*JSONStore); ok {
-			backupJSON("beforeSave")
-		}
-
-		if err := store.Save(body); err != nil {
-			log.Printf("Error saving bookmarks: %v", err)
-			http.Error(w, "Failed to save bookmarks", http.StatusInternalServerError)
-			return
-		}
-
-		log.Println("Bookmarks saved successfully")
-		w.WriteHeader(http.StatusNoContent)
+func handleGetBookmarks(store BookmarkStore, w http.ResponseWriter, r *http.Request) {
+	data, err := store.Load()
+	if err != nil {
+		log.Printf("Error loading bookmarks: %v", err)
+		http.Error(w, "Failed to load bookmarks", http.StatusInternalServerError)
+		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
+}
+
+func handleSaveBookmarks(store BookmarkStore, w http.ResponseWriter, r *http.Request) {
+	// Limit request body size
+	r.Body = http.MaxBytesReader(w, r.Body, maxRequestBodyMB*1024*1024)
+	
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Error reading request body: %v", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Validate JSON
+	if !json.Valid(body) {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Create backup before save (JSON only)
+	if _, ok := store.(*JSONStore); ok {
+		backupJSON("beforeSave")
+	}
+
+	if err := store.Save(body); err != nil {
+		log.Printf("Error saving bookmarks: %v", err)
+		http.Error(w, "Failed to save bookmarks", http.StatusInternalServerError)
+		return
+	}
+
+	log.Println("Bookmarks saved successfully")
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func backupJSON(label string) {
@@ -401,4 +409,3 @@ func backupJSON(label string) {
 func fmtError(status string, body []byte) error {
 	return fmt.Errorf("http error %s: %s", status, string(body))
 }
-
