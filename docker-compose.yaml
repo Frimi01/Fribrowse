@@ -5,7 +5,7 @@
 # You do not need this file if you don't wish to use docker compose.
 
 # For more help on the different ways to configure fribrowse, see
-# https://github/frimi01/fribrowse/docs/configuration.md
+# https://github.com/Frimi01/Fribrowse/tree/main/docs/configuration.md
 
 services:
   app:
