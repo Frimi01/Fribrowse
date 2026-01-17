@@ -1,7 +1,16 @@
+# YOU CAN EDIT THE CONFIGURATION BELOW BY CHANGING OR REMOVING VARIABLES
+# ALWAYS TAKE A BACKUP OF ANY EXISTING BOOKMARKS BEFORE CHANGING CONFIGURATION
+
+# This file configures both the application and datase for use with docker compose. 
+# You do not need this file if you don't wish to use docker compose.
+
+# For more help on the different ways to configure fribrowse, see
+# https://github/frimi01/fribrowse/docs/configuration.md
+
 services:
   app:
     image: golang
-    container_name: bookmarks-app
+    container_name: fribrowse-go-server
     working_dir: /app
     volumes:
       - .:/app
@@ -9,7 +18,13 @@ services:
     ports:
       - "3002:3002"
     environment:
+      # Storage mode:
+      # - couchdb (default and recommended with docker compose)
+      # - json (stores bookmarks in a local JSON file, no database required)
       STORE: couchdb
+
+      # CouchDB connection settings
+      # These are ignored if STORE is set to "json"
       COUCH_URL: http://couchdb:5984
       COUCH_USER: admin
       COUCH_PASS: admin
@@ -18,6 +33,12 @@ services:
       couchdb:
         condition: service_healthy
 
+
+  # CouchDB database (used when STORE=couchdb)
+  #
+  # You can REMOVE this entire section if:
+  # - You want to use STORE=json
+  # - OR you already have your own CouchDB server
   couchdb:
     image: couchdb:latest
     container_name: bookmarks-couchdb
@@ -35,7 +56,8 @@ services:
       timeout: 5s
       retries: 5
 
-  # Optional: Initialize CouchDB system databases
+  # Optional: Initializes CouchDB internal system databases
+  # Safe to remove after the first successful startup
   couchdb-init:
     image: curlimages/curl:latest
     container_name: bookmarks-couchdb-init
@@ -52,5 +74,8 @@ services:
         echo "System databases created!"
     restart: "no"
 
+
+
+#################Volumes#####################################
 volumes:
   couchdb-data:
