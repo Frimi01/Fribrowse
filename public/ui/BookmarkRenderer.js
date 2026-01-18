@@ -47,7 +47,8 @@ export class BookmarkRenderer {
         const folderName = document.createElement("span");
 
         folderName.classList.add("folder");
-        folderName.textContent = `📁 ${folder.name}`;
+        folderName.classList.toggle("closed-folder", !folder.open);
+        folderName.textContent = `${folder.open ? "📂" : "📁"} ${folder.name}`;
 
         folderName.onclick = () => {
             this.manager.toggleFolder(folderPath);

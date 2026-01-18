@@ -190,13 +190,17 @@ button:hover {
 /* === Folder & Bookmark System === */
 .folder {
     cursor: pointer;
-    font-weight: bold;
+    font-weight: normal;
     position: relative;
 }
 
 .folder-content {
     margin-left: none;
     display: none;
+}
+
+.closed-folder {
+    font-weight: bold;
 }
 
 .bookmark {
