@@ -10,35 +10,113 @@ export class BookmarkManager {
     async getBookmarks() {
         try {
             const res = await fetch(`${this.api}/bookmarks`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            
+            if (!res.ok) {
+                console.error("Error loading bookmarks:", res);
+                
+                let userMessage = "Unable to load bookmarks.";
+                let technicalDetails = `Server responded with status ${res.status}`;
+                
+                if (res.status === 404) {
+                    userMessage = "Bookmarks not found. Starting with an empty collection.";
+                    technicalDetails = `No bookmarks.json file exists yet. One will be created when you save.\nStatus: ${res.status}`;
+                } else if (res.status === 500) {
+                    userMessage = "Server error while loading bookmarks.";
+                    technicalDetails = `The server encountered an internal error. Check server logs.\nStatus: ${res.status}`;
+                } else if (res.status === 0 || res.status >= 502) {
+                    userMessage = "Cannot connect to bookmark server.";
+                    technicalDetails = `Server may be down or unreachable. Check if the server is running.\nStatus: ${res.status}`;
+                }
+                
+                notification(userMessage, technicalDetails, true, true);
+                this.bookmarks = [];
+                return [];
+            }
+            
             this.bookmarks = await res.json();
             return this.bookmarks;
+            
         } catch (err) {
             console.error("Error loading bookmarks:", err);
+            
+            // Network/connection errors
+            let userMessage = "Cannot connect to bookmark server.";
+            let technicalDetails = err.message;
+            notification(userMessage, technicalDetails, true, true);
+
             this.bookmarks = [];
             return [];
         }
     }
 
-    // Save bookmarks (overwrite the single document)
     async saveBookmarksToServer() {
         if (this.saving) {
             this.pendingSave = true;
             return;
         }
+
         this.saving = true;
 
-        try {
-            const res = await fetch(`${this.api}/bookmarks`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(this.bookmarks),
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        } catch (err) {
-            console.error("Failed to save bookmarks:", err);
-            alert("Failed to save bookmarks.");
-        }
+		while(true) {
+			try {
+				const res = await fetch(`${this.api}/bookmarks`, {
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(this.bookmarks),
+				});
+				
+				if (!res.ok) {
+					console.error("Failed to save bookmarks:", res);
+					
+					const retry = confirm(
+						"Saving request failed. Do you wish to retry?\n\n" +
+						"Make sure the server is up, or press Cancel to review the error details before trying again.\n" +
+						"You can continue to make changes, but remember to export any unsynced changes if you choose to cancel."
+					);
+					if (!retry) { 
+						let userMessage = "Failed to save bookmarks.";
+						let technicalDetails = `Server responded with status ${res.status}`;
+						
+						if (res.status === 500) {
+							technicalDetails = `Server error while saving. Changes may not be persisted. Check server logs.\nStatus: ${res.status}`;
+						} else if (res.status === 400) {
+							userMessage = "Invalid bookmark data.";
+							technicalDetails = `Server rejected the bookmark data.\nStatus: ${res.status}`;
+						} else if (res.status === 0 || res.status >= 502) {
+							userMessage = "Cannot connect to bookmark server.";
+							technicalDetails = `Server is unreachable. Changes will be lost if you close this page.\nStatus: ${res.status}`;
+						}
+
+						notification(userMessage, technicalDetails, true, true);
+						break; 
+					} 
+					continue;
+
+				} else {
+					console.log("Bookmarks saved successfully!")
+					break;
+				}
+				
+			} catch (err) {
+				console.error("Failed to save bookmarks:", err);
+				
+				const retry = confirm(
+					"Saving request failed. Do you wish to retry?\n\n" +
+					"Make sure the server is up, or press Cancel to review the error details before trying again.\n" +
+					"You can continue to make changes, but remember to export any unsynced changes if you choose to cancel."
+				);
+				
+				if (!retry) { 
+					let userMessage = "Cannot save bookmarks.";
+					let technicalDetails = "Server connection failed. Changes will be lost if you close this page.";
+
+					notification(userMessage, technicalDetails, true, true);
+					break; 
+				} 
+				continue;
+			}
+		}
+
 
         this.saving = false;
         if (this.pendingSave) {
