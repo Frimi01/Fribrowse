@@ -114,6 +114,23 @@ button:hover {
     background-color: var(--primary-hover);
 }
 
+.sync-button {
+	position: fixed;
+	bottom: 20px;
+	right: 20px;
+	padding: 10px 14px;
+	font-size: 14px;
+	border-radius: 6px;
+	border: 1px solid #ffc107;
+	background: #fef3cd;
+	color: #856404;
+	cursor: pointer;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+	z-index: 10000;
+	display: none;
+
+}
+
 /* === Search Bar === */
 .searchbar {
     display: flex;
@@ -361,3 +378,4 @@ button:hover {
 .info-notification .notification-technical {
     color: #856404;
 }
+

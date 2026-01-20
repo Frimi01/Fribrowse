@@ -6,6 +6,9 @@ export class BookmarkManager {
         this.bookmarks = [];
         this.saving = false;
         this.pendingSave = false;
+		this.unsynced = false;
+
+		this.createSyncButton();
     }
 
     async getBookmarks() {
@@ -51,6 +54,7 @@ export class BookmarkManager {
     }
 
     async saveBookmarksToServer() {
+		if (this.unsynced) { return; }
         if (this.saving) {
             this.pendingSave = true;
             return;
@@ -88,6 +92,7 @@ export class BookmarkManager {
 							technicalDetails = `Server is unreachable. Changes will be lost if you close this page.\nStatus: ${res.status}`;
 						}
 
+						this.unsync();
 						notification(userMessage, technicalDetails, true, true);
 						break; 
 					} 
@@ -111,6 +116,7 @@ export class BookmarkManager {
 					let userMessage = "Cannot save bookmarks.";
 					let technicalDetails = "Server connection failed. Changes will be lost if you close this page.";
 
+					this.unsync();
 					notification(userMessage, technicalDetails, true, true);
 					break; 
 				} 
@@ -122,9 +128,31 @@ export class BookmarkManager {
         this.saving = false;
         if (this.pendingSave) {
             this.pendingSave = false;
-            await this.saveBookmarksToServer();
+			if (!this.unsynced) {
+				await this.saveBookmarksToServer();
+			}
         }
     }
+
+	// Unsynced handling
+	createSyncButton() {
+		this.syncButton = document.createElement('button');
+		this.syncButton.textContent = 'Sync bookmarks';
+		this.syncButton.classList.add('sync-button');
+
+		this.syncButton.onclick = async () => {
+			this.unsynced = false;
+			this.syncButton.style.display = 'none';
+			await this.saveBookmarksToServer();
+		};
+
+		document.body.appendChild(this.syncButton);
+	}
+
+	unsync() {
+		this.unsynced = true;
+		this.syncButton.style.display = 'block';
+	}
 
     // Bookmark Manipulation
 
