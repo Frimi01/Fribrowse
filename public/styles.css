@@ -264,3 +264,100 @@ button:hover {
     font-weight: bold;
     color: inherit;
 }
+
+
+/* === Notification Handler === */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    max-width: 400px;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.error-notification {
+    background: #fee;
+    border: 2px solid #dc3545;
+}
+
+.info-notification {
+    background: #fef3cd;
+    border: 2px solid #ffc107;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 8px;
+}
+
+.error-notification .notification-header strong {
+    color: #721c24;
+}
+
+.info-notification .notification-header strong {
+    color: #856404;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 8px;
+    line-height: 1;
+}
+
+.error-notification .notification-close {
+    color: #721c24;
+}
+
+.info-notification .notification-close {
+    color: #856404;
+}
+
+.notification-close:hover {
+    opacity: 0.7;
+}
+
+.notification-details {
+    margin-top: 8px;
+}
+
+.notification-details summary {
+    cursor: pointer;
+    font-size: 0.9em;
+    user-select: none;
+}
+
+.error-notification .notification-details summary {
+    color: #721c24;
+}
+
+.info-notification .notification-details summary {
+    color: #856404;
+}
+
+.notification-technical {
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-family: monospace;
+    white-space: pre-wrap;
+}
+
+.error-notification .notification-technical {
+    color: #721c24;
+}
+
+.info-notification .notification-technical {
+    color: #856404;
+}
