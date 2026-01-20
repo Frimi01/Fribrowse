@@ -154,6 +154,23 @@ export class BookmarkManager {
 		this.syncButton.style.display = 'block';
 	}
 
+	// Api functions
+
+    async checkApiHealth() {
+        try {
+            const res = await fetch(`${this.api}/health`);
+            if (res.ok) {
+				console.log("connected", res)
+                return true;
+            }
+				console.log("disconnected", res)
+            return false;
+        } catch (err) {
+				console.log("disconnected", err)
+            return false;
+        }
+    }
+
     // Bookmark Manipulation
 
     getFolderByPath(folderPath) {
