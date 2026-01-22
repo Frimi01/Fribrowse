@@ -1,6 +1,7 @@
 backups/
 .direnv/
 .envrc
+docker-compose.yaml
 
 # Ignore logs
 logs/
