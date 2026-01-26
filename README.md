@@ -7,50 +7,75 @@ FriBrowse is a minimalistic, customizable hub for organizing bookmarks, searchin
 *Right click for context menus*
 ![2025-05-13 06_51_47-🔍FriBrowse](https://github.com/user-attachments/assets/31aa2bea-8c97-4561-9842-0d4f2c06ea74)
 
+## ⚠ Notice:
+Before any and all migrations, as well as periodically, it can be smart to export your bookmarks. The app has been tested for various situations but I cannot currently give a 100% guarantee that there are no bugs.
 
+The mobile interface is unfinished. You can still use your existing bookmarks but the context menu isn't functional.
 
-# 🚧 Plans
+## 🏗️ Download and Build Instructions
+If any release is outdated, you can open an issue requesting an updated build or compile it yourself.
 
-1. ~~Refit the functionality of V1.0 to follow new goals.~~
-2. ~~Add Search Bar for navigating folders.~~
-3. ~~Rewrite backend in go.~~
-4. Turn into browser extention
-5. Make a website ready version of the server that can be deployed and handle multiple users. (based on V1.2)
+### Windows and Linux (No Docker Required):
+1. Download the latest release from [Releases](https://github.com/Frimi01/Fribrowse/releases/) 
+2. Unzip and run the executable 
+3. Open http://localhost:3002 in your browser
 
-# 🏗️  Download and Build Instructions
-For a ready-to-use version, visit the [Releases](https://github.com/Frimi01/Fribrowse/releases/) section.
-If the release is outdated, open an issue requesting an updated build.
-
-If you simply want the app up and running you can download all the neccasary
-files already set up for you in the GitHub Releases panel. If it's outdated and
-you want a updated version you can issue a issue.
-
-## Windows:
-To build the app without opening a console you can use the following command:
-```bash
-go build -ldflags -H=windowsgui
+### Docker:
+#### For use with JSON
+```yaml 
+# docker-compose.yaml 
+services: 
+  fribrowse: 
+    image: ghcr.io/frimi01/fribrowse:latest 
+  ports: 
+    - "3002:3002" 
+  volumes: 
+    - ./data:/app/data 
+  environment: 
+    - STORE=json 
 ```
-## Linux and Mac
-On linux you should usually be able to build it normally with `go build` if you have gcc, gtk3 and libayatana-appindicator installed. 
 
-For further instructions you should try to following the instructions from systray: https://github.com/getlantern/systray
+#### For use with CouchDB
+```yaml
+# docker-compose.yaml
+services:
+  fribrowse:
+    image: ghcr.io/frimi01/fribrowse:latest
+    container_name: fribrowse-go-server
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      STORE: couchdb
+      COUCH_URL: http://couchdb:5984 # If couchdb is hosted on a different device you need to change this url, otherwise keep this.
+      COUCH_USER: Username # CHANGE
+      COUCH_PASS: StrongPassword # CHANGE
+      COUCH_DB: fribrowse # Can be changed
+```
 
-MacOS is untested.
+## Documentation
 
-# ⚡ How to use:
+Environment variables. If none are set, the API will fall back on JSON.
 
-It's pretty intuitive:
+| Variable    | Description     | Example                         |
+| ----------- | --------------- | ------------------------------- |
+| STORE       | Storage backend | `json` or `couchdb`             |
+| COUCH_URL   | CouchDB URL     | `http://database/url/here:5984` |
+| COUCH_USER: | Username        | `admin`                         |
+| COUCH_PASS: | Password        | `StrongPassword`                |
+| COUCH_DB:   | Database name   | `fribrowse`                     |
 
-- Double click executable! (or make program start at startup)
-- Use the tray icon to open the page in your browser or quit
+[Development Setup](development.md)
+
+## ⚡ How to use:
+
 - Add folders for organizing bookmarks.
 - Right-click folders/bookmarks for options.
-- To add a bookmark, click add bookmark under folder, imput name and paste URL in the prompts.
+- To add a bookmark, click add bookmark under folder, input name and paste URL in the prompts.
 - Drag and drop to rearrange.
-- It will keep the last automatic backups when you open a page or stop the program. You can find them in the backup folder.
-- If you are updating or want store, use or recover bookmarks.json files the intended import/export buttons works the best. 
+- If you are updating or want store, use or recover bookmarks your bookmarks, use the import/export buttons. 
 
-# ❓ Questions and Answers
+## ❓ Questions and Answers
 
 **1. What happened to the searching feature?**
 
@@ -67,7 +92,7 @@ Feel free to open an issue or submit a pull request! I'm happy to consider impro
 **4. I found a bug. What should I do?**
 
 Please open an issue describing the problem. Include any relevant details if possible:
-- Description of bug and intended behaviour.
+- Description of bug and intended behavior.
 - Error messages (try to run the server from a console if possible)
 - Screenshots
 - Steps to reproduce the bug.
