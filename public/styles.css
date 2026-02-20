@@ -22,7 +22,7 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
     margin: 0;
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .main-content {
