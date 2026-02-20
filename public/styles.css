@@ -1,8 +1,7 @@
 /*  //GitHub (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
     styles.css 
 */
-/* === Theme Variables === */
-/* Light Mode */
+
 :root {
     --primary-color: #2e7d32;
     --primary-hover: #1b5e20;
@@ -18,7 +17,6 @@
 }
 
 
-/* === Global Styles === */
 body {
     font-family: var(--font-family);
     background-color: var(--background-color);
@@ -27,9 +25,6 @@ body {
     height: 100vh;
 }
 
-/* === Layout === */
-
-/* === Main Content === */
 .main-content {
     margin: 20px;
     overflow-y: auto;
@@ -53,7 +48,7 @@ body {
     opacity: 0.3;
     z-index: -1;
 }
-/* === Header Bar === */
+
 .header-bar {
     background-color: var(--border-color);
     padding: var(--spacing-medium);
@@ -87,7 +82,6 @@ body {
     background-color: var(--primary-hover);
 }
 
-/* === Buttons (General) === */
 button {
     padding: var(--spacing-small) var(--spacing-medium);
     background-color: var(--primary-color);
@@ -118,7 +112,6 @@ button:hover {
 
 }
 
-/* === Search Bar === */
 .searchbar {
     display: flex;
     margin: 0 var(--spacing-small);
@@ -172,7 +165,6 @@ button:hover {
     background-color: darkcyan;
 }
 
-/* === Add Folder Button === */
 .add-folder-button {
     margin: 4px;
     padding: var(--spacing-small) var(--spacing-medium);
@@ -191,7 +183,6 @@ button:hover {
     background-color: #ddd;
 }
 
-/* === Folder & Bookmark System === */
 .folder {
     cursor: pointer;
     font-weight: normal;
@@ -211,7 +202,6 @@ button:hover {
     position: relative;
 }
 
-/* === Context Menu === */
 .context-menu {
     display: none;
     position: absolute;
@@ -236,7 +226,6 @@ button:hover {
     background: var(--bg-light);
 }
 
-/* === Bookmark Tree === */
 #bookmarkTree {
     list-style: none;
     padding: 0;
@@ -270,7 +259,6 @@ button:hover {
 }
 
 
-/* === Notification Handler === */
 .notification {
     position: fixed;
     top: 20px;
