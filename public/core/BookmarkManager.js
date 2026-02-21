@@ -2,12 +2,16 @@
 import { notification } from '../ui/NotificationHandler.js';
 export class BookmarkManager {
     constructor(api = "/api") {
+        // Path to api
         this.api = api;
+
+        // JSON
         this.bookmarks = [];
+
+        // Saving and sync
         this.saving = false;
         this.pendingSave = false;
         this.unsynced = false;
-
         this.createSyncButton();
     }
 
