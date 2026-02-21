@@ -46,8 +46,16 @@ export class BookmarkManager {
                 this.bookmarks = [];
                 return [];
             }
+
+            const json = await res.json();
+
+            if (Array.isArray(json)) {
+                migrate(0)
+            }
             
-            this.bookmarks = await res.json();
+
+            this.revision = json.revision ?? null;
+            this.bookmarks = json.data ?? [];
             return this.bookmarks;
             
         } catch (err) {
@@ -178,6 +186,24 @@ export class BookmarkManager {
         } catch (err) {
 				console.log("disconnected", err)
             return false;
+        }
+    }
+
+    migrate(oldVersion) {
+        const doBackup = confirm(
+            "Your bookmarks are in an older format and need to be migraded.\n\n" +
+            "Please back up your bookmarks before continuing to prevent possible loss of data." +
+            "Press OK to export before migrating, or Cancel to migrate without a backup."
+        );
+        if (doBackup) {
+
+        }
+        switch (oldVersion){
+            case 0:
+                this.revision = null;
+                this.bookmarks = json;
+            default:
+                notification("Migration failed, manual reformatting required.", "oldVersion not identifiable.", true, true);
         }
     }
 
