@@ -6,9 +6,9 @@ export class BookmarkManager {
         this.bookmarks = [];
         this.saving = false;
         this.pendingSave = false;
-		this.unsynced = false;
+        this.unsynced = false;
 
-		this.createSyncButton();
+        this.createSyncButton();
     }
 
     async getBookmarks() {
