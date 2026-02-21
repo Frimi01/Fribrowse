@@ -30,6 +30,10 @@ export class BookmarkManager {
                 if (res.status === 404) {
                     userMessage = "Bookmarks not found. Starting with an empty collection.";
                     technicalDetails = `No bookmarks.json file exists yet. One will be created when you save.\nStatus: ${res.status}`;
+                    notification(userMessage, technicalDetails, false, false);
+                    this.revision = null;
+                    this.bookmarks = [];
+                    return[];
                 } else if (res.status === 500) {
                     userMessage = "Server error while loading bookmarks.";
                     technicalDetails = `The server encountered an internal error. Check server logs.\nStatus: ${res.status}`;
