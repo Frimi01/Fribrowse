@@ -1,84 +1,84 @@
 //GitHub (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import { notification } from '../ui/NotificationHandler.js';
 export class BookmarkManager {
-    constructor(api = "/api", version) {
-        // Path to api
-        this.api = api;
+	constructor(api = "/api", version) {
+		// Path to api
+		this.api = api;
 
-        // JSON
-        this.version = version;
-        this.revision = null;
-        this.bookmarks = [];
+		// JSON
+		this.version = version;
+		this.revision = null;
+		this.bookmarks = [];
 
-        // Saving and sync
-        this.saving = false;
-        this.pendingSave = false;
-        this.unsynced = false;
-        this.createSyncButton();
-    }
+		// Saving and sync
+		this.saving = false;
+		this.pendingSave = false;
+		this.unsynced = false;
+		this.createSyncButton();
+	}
 
-    async getBookmarks() {
-        try {
-            const res = await fetch(`${this.api}/bookmarks`);
-            
-            if (!res.ok) {
-                console.error("Error loading bookmarks:", res);
-                
-                let userMessage = "Unable to load bookmarks.";
-                let technicalDetails = `Server responded with status ${res.status}`;
-                
-                if (res.status === 404) {
-                    userMessage = "Bookmarks not found. Starting with an empty collection.";
-                    technicalDetails = `No bookmarks.json file exists yet. One will be created when you save.\nStatus: ${res.status}`;
-                    notification(userMessage, technicalDetails, false, false);
-                    this.revision = null;
-                    this.bookmarks = [];
-                    return[];
-                } else if (res.status === 500) {
-                    userMessage = "Server error while loading bookmarks.";
-                    technicalDetails = `The server encountered an internal error. Check server logs.\nStatus: ${res.status}`;
-                } else if (res.status === 0 || res.status >= 502) {
-                    userMessage = "Cannot connect to bookmark server.";
-                    technicalDetails = `Server may be down or unreachable. Check if the server is running.\nStatus: ${res.status}`;
-                }
-                
-                notification(userMessage, technicalDetails, true, true);
-                this.bookmarks = [];
-                return [];
-            }
+	async getBookmarks() {
+		try {
+			const res = await fetch(`${this.api}/bookmarks`);
+			
+			if (!res.ok) {
+				console.error("Error loading bookmarks:", res);
+				
+				let userMessage = "Unable to load bookmarks.";
+				let technicalDetails = `Server responded with status ${res.status}`;
+				
+				if (res.status === 404) {
+					userMessage = "Bookmarks not found. Starting with an empty collection.";
+					technicalDetails = `No bookmarks.json file exists yet. One will be created when you save.\nStatus: ${res.status}`;
+					notification(userMessage, technicalDetails, false, false);
+					this.revision = null;
+					this.bookmarks = [];
+					return[];
+				} else if (res.status === 500) {
+					userMessage = "Server error while loading bookmarks.";
+					technicalDetails = `The server encountered an internal error. Check server logs.\nStatus: ${res.status}`;
+				} else if (res.status === 0 || res.status >= 502) {
+					userMessage = "Cannot connect to bookmark server.";
+					technicalDetails = `Server may be down or unreachable. Check if the server is running.\nStatus: ${res.status}`;
+				}
+				
+				notification(userMessage, technicalDetails, true, true);
+				this.bookmarks = [];
+				return [];
+			}
 
-            const json = await res.json();
+			const json = await res.json();
 
-            if (Array.isArray(json)) {
-                migrate(0)
-            }
-            
+			if (Array.isArray(json)) {
+				migrate(0)
+			}
+			
 
-            this.revision = json.revision ?? null;
-            this.bookmarks = json.data ?? [];
-            return this.bookmarks;
-            
-        } catch (err) {
-            console.error("Error loading bookmarks:", err);
-            
-            // Network/connection errors
-            let userMessage = "Cannot connect to bookmark server.";
-            let technicalDetails = err.message;
-            notification(userMessage, technicalDetails, true, true);
+			this.revision = json.revision ?? null;
+			this.bookmarks = json.data ?? [];
+			return this.bookmarks;
+			
+		} catch (err) {
+			console.error("Error loading bookmarks:", err);
+			
+			// Network/connection errors
+			let userMessage = "Cannot connect to bookmark server.";
+			let technicalDetails = err.message;
+			notification(userMessage, technicalDetails, true, true);
 
-            this.bookmarks = [];
-            return [];
-        }
-    }
+			this.bookmarks = [];
+			return [];
+		}
+	}
 
-    async saveBookmarksToServer() {
+	async saveBookmarksToServer() {
 		if (this.unsynced) { return; }
-        if (this.saving) {
-            this.pendingSave = true;
-            return;
-        }
+		if (this.saving) {
+			this.pendingSave = true;
+			return;
+		}
 
-        this.saving = true;
+		this.saving = true;
 
 		while(true) {
 			try {
@@ -143,14 +143,14 @@ export class BookmarkManager {
 		}
 
 
-        this.saving = false;
-        if (this.pendingSave) {
-            this.pendingSave = false;
+		this.saving = false;
+		if (this.pendingSave) {
+			this.pendingSave = false;
 			if (!this.unsynced) {
 				await this.saveBookmarksToServer();
 			}
-        }
-    }
+		}
+	}
 
 	// Unsynced handling
 	createSyncButton() {
@@ -174,187 +174,187 @@ export class BookmarkManager {
 
 	// Api functions
 
-    async checkApiHealth() {
-        try {
-            const res = await fetch(`${this.api}/health`);
-            if (res.ok) {
+	async checkApiHealth() {
+		try {
+			const res = await fetch(`${this.api}/health`);
+			if (res.ok) {
 				console.log("connected", res)
-                return true;
-            }
+				return true;
+			}
 				console.log("disconnected", res)
-            return false;
-        } catch (err) {
+			return false;
+		} catch (err) {
 				console.log("disconnected", err)
-            return false;
-        }
-    }
+			return false;
+		}
+	}
 
-    migrate(oldVersion) {
-        const doBackup = confirm(
-            "Your bookmarks are in an older format and need to be migraded.\n\n" +
-            "Please back up your bookmarks before continuing to prevent possible loss of data." +
-            "Press OK to export before migrating, or Cancel to migrate without a backup."
-        );
-        if (doBackup) {
+	migrate(oldVersion) {
+		const doBackup = confirm(
+			"Your bookmarks are in an older format and need to be migraded.\n\n" +
+			"Please back up your bookmarks before continuing to prevent possible loss of data." +
+			"Press OK to export before migrating, or Cancel to migrate without a backup."
+		);
+		if (doBackup) {
 
-        }
-        switch (oldVersion){
-            case 0:
-                this.revision = null;
-                this.bookmarks = json;
-            default:
-                notification("Migration failed, manual reformatting required.", "oldVersion not identifiable.", true, true);
-        }
-    }
+		}
+		switch (oldVersion){
+			case 0:
+				this.revision = null;
+				this.bookmarks = json;
+			default:
+				notification("Migration failed, manual reformatting required.", "oldVersion not identifiable.", true, true);
+		}
+	}
 
-    // Bookmark Manipulation
+	// Bookmark Manipulation
 
-    getFolderByPath(folderPath) {
-        let folder = { folders: this.bookmarks };
-        for (let index of folderPath) {
-            if (!folder.folders || !folder.folders[index]) {
-                return null;
-            }
-            folder = folder.folders[index];
-        }
-        return folder;
-    }
+	getFolderByPath(folderPath) {
+		let folder = { folders: this.bookmarks };
+		for (let index of folderPath) {
+			if (!folder.folders || !folder.folders[index]) {
+				return null;
+			}
+			folder = folder.folders[index];
+		}
+		return folder;
+	}
 
-    sort() {
-        this.bookmarks.sort((a, b) =>
-            a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-        );
-        this.bookmarks.forEach((folder) => this.sortSubfoldersAndBookmarks(folder));
-    }
+	sort() {
+		this.bookmarks.sort((a, b) =>
+			a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+		);
+		this.bookmarks.forEach((folder) => this.sortSubfoldersAndBookmarks(folder));
+	}
 
-    sortSubfoldersAndBookmarks(node) {
-        if (node.bookmarks) {
-            node.bookmarks.sort((a, b) =>
-                a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-            );
-        }
+	sortSubfoldersAndBookmarks(node) {
+		if (node.bookmarks) {
+			node.bookmarks.sort((a, b) =>
+				a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+			);
+		}
 
-        if (node.folders) {
-            node.folders.sort((a, b) =>
-                a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
-            );
+		if (node.folders) {
+			node.folders.sort((a, b) =>
+				a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+			);
 
-            node.folders.forEach((childFolder) => {
-                this.sortSubfoldersAndBookmarks(childFolder);
-            });
-        }
-    }
+			node.folders.forEach((childFolder) => {
+				this.sortSubfoldersAndBookmarks(childFolder);
+			});
+		}
+	}
 
-    toggleFolder(folderPath) {
-        const folder = this.getFolderByPath(folderPath);
-        if (!folder) return console.error("Folder not found:", folderPath);
-        folder.open = !folder.open;
-    }
+	toggleFolder(folderPath) {
+		const folder = this.getFolderByPath(folderPath);
+		if (!folder) return console.error("Folder not found:", folderPath);
+		folder.open = !folder.open;
+	}
 
-    addFolder(name, parentPath = null) {
-        if (!name) {
-            console.error("Error making folder: No name parameter.");
-            return;
-        }
+	addFolder(name, parentPath = null) {
+		if (!name) {
+			console.error("Error making folder: No name parameter.");
+			return;
+		}
 
-        const newFolder = {
-            name,
-            folders: [],
-            bookmarks: [],
-            open: false,
-        };
+		const newFolder = {
+			name,
+			folders: [],
+			bookmarks: [],
+			open: false,
+		};
 
-        if (parentPath === null) {
-            this.bookmarks.push(newFolder);
-        } else {
-            const parent = this.getFolderByPath(parentPath);
-            if (parent) parent.folders.push(newFolder);
-        }
-    }
+		if (parentPath === null) {
+			this.bookmarks.push(newFolder);
+		} else {
+			const parent = this.getFolderByPath(parentPath);
+			if (parent) parent.folders.push(newFolder);
+		}
+	}
 
-    deleteFolder(folderPath) {
-        let parentPath = [...folderPath];
-        let folderIndex = parentPath.pop();
-        let parentFolder = this.getFolderByPath(parentPath);
+	deleteFolder(folderPath) {
+		let parentPath = [...folderPath];
+		let folderIndex = parentPath.pop();
+		let parentFolder = this.getFolderByPath(parentPath);
 
-        if (parentFolder) {
-            parentFolder.folders.splice(folderIndex, 1);
-        } else {
-            this.bookmarks.splice(folderIndex, 1);
-        }
-    }
+		if (parentFolder) {
+			parentFolder.folders.splice(folderIndex, 1);
+		} else {
+			this.bookmarks.splice(folderIndex, 1);
+		}
+	}
 
-    renameFolder(folderPath, newName) {
-        let folder = this.getFolderByPath(folderPath);
-        if (!folder) return console.error("Error: Folder not found.");
-        if (!newName) {
-            return console.error("Error: New name parameter not found.");
-        }
-        folder.name = newName;
-    }
+	renameFolder(folderPath, newName) {
+		let folder = this.getFolderByPath(folderPath);
+		if (!folder) return console.error("Error: Folder not found.");
+		if (!newName) {
+			return console.error("Error: New name parameter not found.");
+		}
+		folder.name = newName;
+	}
 
-    addBookmark(folderPath, name, url) {
-        if (!name || !url) {
-            return console.error("Error: Lacking required parameters.");
-        }
+	addBookmark(folderPath, name, url) {
+		if (!name || !url) {
+			return console.error("Error: Lacking required parameters.");
+		}
 
-        const targetFolder = this.getFolderByPath(folderPath);
-        if (!targetFolder || !targetFolder.bookmarks) {
-            return console.error("Error: Could not find target folder!");
-        }
+		const targetFolder = this.getFolderByPath(folderPath);
+		if (!targetFolder || !targetFolder.bookmarks) {
+			return console.error("Error: Could not find target folder!");
+		}
 
-        targetFolder.bookmarks.push({ name, url });
-    }
+		targetFolder.bookmarks.push({ name, url });
+	}
 
-    updateBookmark(folderPath, bookmarkIndex, property, value) {
-        const folder = this.getFolderByPath(folderPath);
-        if (!folder || !folder.bookmarks[bookmarkIndex]) {
-            return console.error("Error: Bookmark not found.");
-        }
-        if (value !== null && value !== "") {
-            folder.bookmarks[bookmarkIndex][property] = value;
-        }
-    }
+	updateBookmark(folderPath, bookmarkIndex, property, value) {
+		const folder = this.getFolderByPath(folderPath);
+		if (!folder || !folder.bookmarks[bookmarkIndex]) {
+			return console.error("Error: Bookmark not found.");
+		}
+		if (value !== null && value !== "") {
+			folder.bookmarks[bookmarkIndex][property] = value;
+		}
+	}
 
-    deleteBookmark(folderPath, bookmarkIndex) {
-        const folder = this.getFolderByPath(folderPath);
-        if (!folder || !folder.bookmarks[bookmarkIndex])
-            return console.error("Error: Bookmark not found.");
+	deleteBookmark(folderPath, bookmarkIndex) {
+		const folder = this.getFolderByPath(folderPath);
+		if (!folder || !folder.bookmarks[bookmarkIndex])
+			return console.error("Error: Bookmark not found.");
 
-        folder.bookmarks.splice(bookmarkIndex, 1);
-    }
+		folder.bookmarks.splice(bookmarkIndex, 1);
+	}
 
-    //dragging
-    moveFolder(sourcePath, targetPath) {
-        if (targetPath.join(",").startsWith(sourcePath.join(","))) {
-            console.error(
-                "Error: Cannot move a folder into itself or its subfolders.",
-            );
-            return false;
-        }
+	//dragging
+	moveFolder(sourcePath, targetPath) {
+		if (targetPath.join(",").startsWith(sourcePath.join(","))) {
+			console.error(
+				"Error: Cannot move a folder into itself or its subfolders.",
+			);
+			return false;
+		}
 
-        let sourceFolder = this.getFolderByPath(sourcePath);
-        if (!sourceFolder) return false;
+		let sourceFolder = this.getFolderByPath(sourcePath);
+		if (!sourceFolder) return false;
 
-        let targetFolder = this.getFolderByPath(targetPath);
-        if (!targetFolder || !targetFolder.folders) return false;
+		let targetFolder = this.getFolderByPath(targetPath);
+		if (!targetFolder || !targetFolder.folders) return false;
 
-        let index = sourcePath[sourcePath.length - 1];
-        this.getFolderByPath(sourcePath.slice(0, -1)).folders.splice(index, 1);
+		let index = sourcePath[sourcePath.length - 1];
+		this.getFolderByPath(sourcePath.slice(0, -1)).folders.splice(index, 1);
 
-        targetFolder.folders.push(sourceFolder);
-        return true;
-    }
+		targetFolder.folders.push(sourceFolder);
+		return true;
+	}
 
-    moveBookmark(sourceFolderPath, bookmarkIndex, targetFolderPath) {
-        let sourceFolder = this.getFolderByPath(sourceFolderPath);
-        if (!sourceFolder || !sourceFolder.bookmarks) return false;
-        let targetFolder = this.getFolderByPath(targetFolderPath);
-        if (!targetFolder || !targetFolder.bookmarks) return false;
+	moveBookmark(sourceFolderPath, bookmarkIndex, targetFolderPath) {
+		let sourceFolder = this.getFolderByPath(sourceFolderPath);
+		if (!sourceFolder || !sourceFolder.bookmarks) return false;
+		let targetFolder = this.getFolderByPath(targetFolderPath);
+		if (!targetFolder || !targetFolder.bookmarks) return false;
 
-        let bookmark = sourceFolder.bookmarks.splice(bookmarkIndex, 1)[0];
+		let bookmark = sourceFolder.bookmarks.splice(bookmarkIndex, 1)[0];
 
-        targetFolder.bookmarks.push(bookmark);
-        return true;
-    }
+		targetFolder.bookmarks.push(bookmark);
+		return true;
+	}
 }
