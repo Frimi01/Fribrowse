@@ -20,20 +20,20 @@ export class BookmarkManager {
 	async getBookmarks() {
 		try {
 			const res = await fetch(`${this.api}/bookmarks`);
-			
+
 			if (!res.ok) {
 				console.error("Error loading bookmarks:", res);
-				
+
 				let userMessage = "Unable to load bookmarks.";
 				let technicalDetails = `Server responded with status ${res.status}`;
-				
+
 				if (res.status === 404) {
 					userMessage = "Bookmarks not found. Starting with an empty collection.";
 					technicalDetails = `No bookmarks.json file exists yet. One will be created when you save.\nStatus: ${res.status}`;
 					notification(userMessage, technicalDetails, false, false);
 					this.revision = null;
 					this.bookmarks = [];
-					return[];
+					return [];
 				} else if (res.status === 500) {
 					userMessage = "Server error while loading bookmarks.";
 					technicalDetails = `The server encountered an internal error. Check server logs.\nStatus: ${res.status}`;
@@ -41,7 +41,7 @@ export class BookmarkManager {
 					userMessage = "Cannot connect to bookmark server.";
 					technicalDetails = `Server may be down or unreachable. Check if the server is running.\nStatus: ${res.status}`;
 				}
-				
+
 				notification(userMessage, technicalDetails, true, true);
 				this.bookmarks = [];
 				return [];
@@ -52,15 +52,15 @@ export class BookmarkManager {
 			if (Array.isArray(json)) {
 				migrate(0)
 			}
-			
+
 
 			this.revision = json.revision ?? null;
 			this.bookmarks = json.data ?? [];
 			return this.bookmarks;
-			
+
 		} catch (err) {
 			console.error("Error loading bookmarks:", err);
-			
+
 			// Network/connection errors
 			let userMessage = "Cannot connect to bookmark server.";
 			let technicalDetails = err.message;
@@ -80,26 +80,26 @@ export class BookmarkManager {
 
 		this.saving = true;
 
-		while(true) {
+		while (true) {
 			try {
 				const res = await fetch(`${this.api}/bookmarks`, {
 					method: "PUT",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify(this.bookmarks),
 				});
-				
+
 				if (!res.ok) {
 					console.error("Failed to save bookmarks:", res);
-					
+
 					const retry = confirm(
 						"Saving request failed. Do you wish to retry?\n\n" +
 						"Make sure the server is up, or press Cancel to review the error details before trying again.\n" +
 						"You can continue to make changes, but remember to export any unsynced changes if you choose to cancel."
 					);
-					if (!retry) { 
+					if (!retry) {
 						let userMessage = "Failed to save bookmarks.";
 						let technicalDetails = `Server responded with status ${res.status}`;
-						
+
 						if (res.status === 500) {
 							technicalDetails = `Server error while saving. Changes may not be persisted. Check server logs.\nStatus: ${res.status}`;
 						} else if (res.status === 400) {
@@ -112,32 +112,32 @@ export class BookmarkManager {
 
 						this.unsync();
 						notification(userMessage, technicalDetails, true, true);
-						break; 
-					} 
+						break;
+					}
 					continue;
 
 				} else {
 					console.log("Bookmarks saved successfully!")
 					break;
 				}
-				
+
 			} catch (err) {
 				console.error("Failed to save bookmarks:", err);
-				
+
 				const retry = confirm(
 					"Saving request failed. Do you wish to retry?\n\n" +
 					"Make sure the server is up, or press Cancel to review the error details before trying again.\n" +
 					"You can continue to make changes, but remember to export any unsynced changes if you choose to cancel."
 				);
-				
-				if (!retry) { 
+
+				if (!retry) {
 					let userMessage = "Cannot save bookmarks.";
 					let technicalDetails = "Server connection failed. Changes will be lost if you close this page.";
 
 					this.unsync();
 					notification(userMessage, technicalDetails, true, true);
-					break; 
-				} 
+					break;
+				}
 				continue;
 			}
 		}
@@ -181,10 +181,10 @@ export class BookmarkManager {
 				console.log("connected", res)
 				return true;
 			}
-				console.log("disconnected", res)
+			console.log("disconnected", res)
 			return false;
 		} catch (err) {
-				console.log("disconnected", err)
+			console.log("disconnected", err)
 			return false;
 		}
 	}
@@ -198,10 +198,11 @@ export class BookmarkManager {
 		if (doBackup) {
 
 		}
-		switch (oldVersion){
+		switch (oldVersion) {
 			case 0:
 				this.revision = null;
 				this.bookmarks = json;
+				break;
 			default:
 				notification("Migration failed, manual reformatting required.", "oldVersion not identifiable.", true, true);
 		}
