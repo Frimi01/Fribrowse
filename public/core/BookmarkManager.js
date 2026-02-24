@@ -236,9 +236,9 @@ export class BookmarkManager {
 		}
 		switch (oldVersion) {
 			case 0:
-				this.revision = null;
-				this.bookmarks = json;
-				break;
+				this.revision = 0;
+				this.bookmarks = oldData;
+				return this.bookmarks;
 			default:
 				notification("Migration failed, manual reformatting required.", "oldVersion not identifiable.", true, true);
 		}
