@@ -116,10 +116,10 @@ export class BookmarkManager {
 					}
 					continue;
 
-				} else {
-					console.log("Bookmarks saved successfully!")
-					break;
 				}
+
+				console.log("Bokmarks saved successfully!")
+				break;
 
 			} catch (err) {
 				console.error("Failed to save bookmarks:", err);
