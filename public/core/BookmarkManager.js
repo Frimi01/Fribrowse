@@ -65,6 +65,16 @@ export class BookmarkManager {
 		}
 	}
 
+	async #fetchCurrentState() {
+		try {
+			const res = await fetch(`${this.api}/bookmarks`);
+			if (!res.ok) return null;
+			return await res.json();
+		} catch {
+			return null;
+		}
+	}
+
 	async saveBookmarksToServer() {
 		if (this.unsynced) { return; }
 		if (this.saving) {
