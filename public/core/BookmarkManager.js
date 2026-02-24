@@ -50,7 +50,7 @@ export class BookmarkManager {
 			const json = await res.json();
 
 			if (Array.isArray(json)) {
-				migrate(0)
+				return this.migrate(0, json);
 			}
 
 
@@ -189,7 +189,7 @@ export class BookmarkManager {
 		}
 	}
 
-	migrate(oldVersion) {
+	migrate(oldVersion, oldData) {
 		const doBackup = confirm(
 			"Your bookmarks are in an older format and need to be migraded.\n\n" +
 			"Please back up your bookmarks before continuing to prevent possible loss of data." +
@@ -206,6 +206,7 @@ export class BookmarkManager {
 			default:
 				notification("Migration failed, manual reformatting required.", "oldVersion not identifiable.", true, true);
 		}
+		
 	}
 
 	// Bookmark Manipulation
