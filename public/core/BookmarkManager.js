@@ -224,7 +224,15 @@ export class BookmarkManager {
 			"Press OK to export before migrating, or Cancel to migrate without a backup."
 		);
 		if (doBackup) {
-
+			const dataStr =
+				"data:text/json;charset=utf-8," +
+				encodeURIComponent(JSON.stringify(oldData));
+			const anchor = document.createElement("a");
+			anchor.setAttribute("href", dataStr);
+			anchor.setAttribute("download", `bookmarks_backup_v${oldVersion}.json`);
+			document.body.appendChild(anchor);
+			anchor.click();
+			document.body.removeChild(anchor);
 		}
 		switch (oldVersion) {
 			case 0:
