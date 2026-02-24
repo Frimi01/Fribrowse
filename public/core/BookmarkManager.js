@@ -86,10 +86,33 @@ export class BookmarkManager {
 
 		while (true) {
 			try {
+				const current = await this.#fetchCurrentState();
+
+				if (current !== null && current.revision !== this.revision) {
+					// Server has a newer revision than what we loaded.
+					const savedAt = current.saved_at
+						? `\nLast saved: ${new Date(current.saved_at).toLocaleString()}`
+						: "";
+
+					notification(
+						"Bookmarks changed on another device.",
+						`Server is at revision ${current.revision}, you have revision ${this.revision}.${savedAt}\n` +
+						`Export your changes, then reload the page to get the latest version.`,
+						true,
+						true
+					);
+					this.unsync();
+					break;
+				}
+
 				const res = await fetch(`${this.api}/bookmarks`, {
 					method: "PUT",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(this.bookmarks),
+					body: JSON.stringify({
+						revision: this.revision + 1,
+						version: this.version,
+						data: this.bookmarks
+					}),
 				});
 
 				if (!res.ok) {
@@ -122,7 +145,8 @@ export class BookmarkManager {
 					continue;
 				}
 
-				console.log("Bokmarks saved successfully!")
+				console.log(`Bookmarks saved successfully! (revision=${this.revision})`);
+				this.revision += 1;
 				break;
 
 			} catch (err) {
