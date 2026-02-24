@@ -10,7 +10,6 @@ export class BookmarkManager {
 		this.revision = 0;
 		this.bookmarks = [];
 
-		// Saving and sync
 		this.saving = false;
 		this.pendingSave = false;
 		this.unsynced = false;
@@ -49,6 +48,7 @@ export class BookmarkManager {
 
 			const json = await res.json();
 
+			// Legacy: server returned a bare array before envelope format was introduced.
 			if (Array.isArray(json)) {
 				return this.migrate(0, json);
 			}
@@ -59,12 +59,7 @@ export class BookmarkManager {
 
 		} catch (err) {
 			console.error("Error loading bookmarks:", err);
-
-			// Network/connection errors
-			let userMessage = "Cannot connect to bookmark server.";
-			let technicalDetails = err.message;
-			notification(userMessage, technicalDetails, true, true);
-
+			notification("Cannot connect to bookmark server.", err.message, true, true);
 			this.bookmarks = [];
 			return [];
 		}
@@ -95,6 +90,7 @@ export class BookmarkManager {
 						"Make sure the server is up, or press Cancel to review the error details before trying again.\n" +
 						"You can continue to make changes, but remember to export any unsynced changes if you choose to cancel."
 					);
+
 					if (!retry) {
 						let userMessage = "Failed to save bookmarks.";
 						let technicalDetails = `Server responded with status ${res.status}`;
@@ -114,7 +110,6 @@ export class BookmarkManager {
 						break;
 					}
 					continue;
-
 				}
 
 				console.log("Bokmarks saved successfully!")
@@ -130,17 +125,18 @@ export class BookmarkManager {
 				);
 
 				if (!retry) {
-					let userMessage = "Cannot save bookmarks.";
-					let technicalDetails = "Server connection failed. Changes will be lost if you close this page.";
-
 					this.unsync();
-					notification(userMessage, technicalDetails, true, true);
+					notification(
+						"Cannot save bookmarks.",
+						"Server connection failed. Changes will be lost if you close this page.",
+						true,
+						true
+					);
 					break;
 				}
 				continue;
 			}
 		}
-
 
 		this.saving = false;
 		if (this.pendingSave) {
@@ -172,26 +168,25 @@ export class BookmarkManager {
 	}
 
 	// Api functions
-
 	async checkApiHealth() {
 		try {
 			const res = await fetch(`${this.api}/health`);
 			if (res.ok) {
-				console.log("connected", res)
+				console.log("connected", res);
 				return true;
 			}
-			console.log("disconnected", res)
+			console.log("disconnected", res);
 			return false;
 		} catch (err) {
-			console.log("disconnected", err)
+			console.log("disconnected", err);
 			return false;
 		}
 	}
 
 	migrate(oldVersion, oldData) {
 		const doBackup = confirm(
-			"Your bookmarks are in an older format and need to be migraded.\n\n" +
-			"Please back up your bookmarks before continuing to prevent possible loss of data." +
+			"Your bookmarks are in an older format and need to be migrated.\n\n" +
+			"Please back up your bookmarks before continuing to prevent possible loss of data.\n" +
 			"Press OK to export before migrating, or Cancel to migrate without a backup."
 		);
 		if (doBackup) {
@@ -205,11 +200,9 @@ export class BookmarkManager {
 			default:
 				notification("Migration failed, manual reformatting required.", "oldVersion not identifiable.", true, true);
 		}
-		
 	}
 
 	// Bookmark Manipulation
-
 	getFolderByPath(folderPath) {
 		let folder = { folders: this.bookmarks };
 		for (let index of folderPath) {
