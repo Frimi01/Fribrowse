@@ -7,7 +7,7 @@ export class BookmarkManager {
 
 		// JSON
 		this.version = version;
-		this.revision = null;
+		this.revision = 0;
 		this.bookmarks = [];
 
 		// Saving and sync
@@ -31,7 +31,7 @@ export class BookmarkManager {
 					userMessage = "Bookmarks not found. Starting with an empty collection.";
 					technicalDetails = `No bookmarks.json file exists yet. One will be created when you save.\nStatus: ${res.status}`;
 					notification(userMessage, technicalDetails, false, false);
-					this.revision = null;
+					this.revision = 0;
 					this.bookmarks = [];
 					return [];
 				} else if (res.status === 500) {
@@ -53,8 +53,7 @@ export class BookmarkManager {
 				return this.migrate(0, json);
 			}
 
-
-			this.revision = json.revision ?? null;
+			this.revision = json.revision ?? 0;
 			this.bookmarks = json.data ?? [];
 			return this.bookmarks;
 
