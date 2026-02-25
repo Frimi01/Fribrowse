@@ -17,18 +17,23 @@ export function exportBookmarks() {
 }
 
 export function importBookmarks(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async function (e) {
-        try {
-            app.manager.bookmarks = JSON.parse(e.target.result);
-            await app.saveAndRender();
-        } catch (err) {
-            return console.error("Failed to import bookmarks:", err);
-        }
-    };
-    reader.readAsText(file);
+    if (confirm("Importing bookmarks will overwrite your current bookmarks. \n" +
+        "It is recommended that you cancel and export your bookmarks first. \n" +
+        "Do you still wish to continue?")){
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function (e) {
+            try {
+                const jsonData = JSON.parse(e.target.result);
+                await app.manager.loadBookmarks(jsonData)
+                await app.saveAndRender();
+            } catch (err) {
+                return console.error("Failed to import bookmarks:", err);
+            }
+        };
+        reader.readAsText(file);
+    }
 }
 
 export async function addRootFolder() {

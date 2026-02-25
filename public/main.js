@@ -14,7 +14,7 @@ class BookmarkApp {
     }
 
     async initialize() {
-        await this.manager.getBookmarks();
+        await this.manager.loadBookmarks();
         this.renderer.render();
     }
 

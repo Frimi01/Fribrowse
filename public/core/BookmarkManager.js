@@ -16,50 +16,66 @@ export class BookmarkManager {
 		this.createSyncButton();
 	}
 
-	async getBookmarks() {
+	async loadBookmarks(data = null) {
 		try {
-			const res = await fetch(`${this.api}/bookmarks`);
+			let json;
+			if (data == null) {
+				const res = await fetch(`${this.api}/bookmarks`);
 
-			if (!res.ok) {
-				console.error("Error loading bookmarks:", res);
+				if (!res.ok) {
+					console.error("Error loading bookmarks:", res);
 
-				let userMessage = "Unable to load bookmarks.";
-				let technicalDetails = `Server responded with status ${res.status}`;
+					let userMessage = "Unable to load bookmarks.";
+					let technicalDetails = `Server responded with status ${res.status}`;
 
-				if (res.status === 404) {
-					userMessage = "Bookmarks not found. Starting with an empty collection.";
-					technicalDetails = `No bookmarks.json file exists yet. One will be created when you save.\nStatus: ${res.status}`;
-					notification(userMessage, technicalDetails, false, false);
-					this.revision = 0;
+					if (res.status === 404) {
+						userMessage = "Bookmarks not found. Starting with an empty collection.";
+						technicalDetails = `No bookmarks.json file exists yet. One will be created when you save.\nStatus: ${res.status}`;
+						notification(userMessage, technicalDetails, false, false);
+						this.revision = 0;
+						this.bookmarks = [];
+						return [];
+					} else if (res.status === 500) {
+						userMessage = "Server error while loading bookmarks.";
+						technicalDetails = `The server encountered an internal error. Check server logs.\nStatus: ${res.status}`;
+					} else if (res.status === 0 || res.status >= 502) {
+						userMessage = "Cannot connect to bookmark server.";
+						technicalDetails = `Server may be down or unreachable. Check if the server is running.\nStatus: ${res.status}`;
+					}
+
+					notification(userMessage, technicalDetails, true, true);
 					this.bookmarks = [];
 					return [];
-				} else if (res.status === 500) {
-					userMessage = "Server error while loading bookmarks.";
-					technicalDetails = `The server encountered an internal error. Check server logs.\nStatus: ${res.status}`;
-				} else if (res.status === 0 || res.status >= 502) {
-					userMessage = "Cannot connect to bookmark server.";
-					technicalDetails = `Server may be down or unreachable. Check if the server is running.\nStatus: ${res.status}`;
 				}
-
-				notification(userMessage, technicalDetails, true, true);
-				this.bookmarks = [];
-				return [];
+				json = await res.json();
+			} else {
+				const current = await this.#fetchCurrentState();
+				this.revision = current.revision;
+				json = data;
 			}
 
-			const json = await res.json();
+
 
 			// Legacy: server returned a bare array before envelope format was introduced.
 			if (Array.isArray(json)) {
 				return this.migrate(0, json);
 			}
 
-			this.revision = json.revision ?? 0;
+			if (!Array.isArray(json.data)) {
+				throw new Error("Invalid bookmark file format");
+			}
+
+			if (json.version !== this.version) {
+				return this.migrate(json.version, json.data);
+			}
+
+			if (data == null){ this.revision = json.revision ?? 0; }
 			this.bookmarks = json.data ?? [];
 			return this.bookmarks;
 
 		} catch (err) {
 			console.error("Error loading bookmarks:", err);
-			notification("Cannot connect to bookmark server.", err.message, true, true);
+			notification("Error loading bookmarks.", err.message, true, true);
 			this.bookmarks = [];
 			return [];
 		}
