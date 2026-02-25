@@ -61,9 +61,9 @@ Environment variables. If none are set, the API will fall back on JSON.
 | ----------- | --------------- | ------------------------------- |
 | STORE       | Storage backend | `json` or `couchdb`             |
 | COUCH_URL   | CouchDB URL     | `http://database/url/here:5984` |
-| COUCH_USER: | Username        | `admin`                         |
-| COUCH_PASS: | Password        | `StrongPassword`                |
-| COUCH_DB:   | Database name   | `fribrowse`                     |
+| COUCH_USER  | Username        | `admin`                         |
+| COUCH_PASS  | Password        | `StrongPassword`                |
+| COUCH_DB    | Database name   | `fribrowse`                     |
 
 [Development Setup](development.md)
 
