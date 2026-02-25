@@ -4,7 +4,10 @@ import { app } from '../main.js';
 export function exportBookmarks() {
     const dataStr =
         "data:text/json;charset=utf-8," +
-        encodeURIComponent(JSON.stringify(app.manager.bookmarks));
+        encodeURIComponent(JSON.stringify({
+            version: app.manager.version,
+            data: app.manager.bookmarks
+        }));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
     downloadAnchor.setAttribute("download", "bookmarks.json");

@@ -1,7 +1,7 @@
 //GitHub (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import { notification } from '../ui/NotificationHandler.js';
 export class BookmarkManager {
-	constructor(api = "/api", version) {
+	constructor(api, version) {
 		// Path to api
 		this.api = api;
 
