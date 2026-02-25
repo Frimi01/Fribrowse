@@ -1,4 +1,4 @@
-//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
+//GitHub (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import { handleDragStart, handleDragOver, handleDrop } from "./DragHandler.js";
 import { showContextMenu } from "./ContextMenu.js";
 
@@ -47,7 +47,8 @@ export class BookmarkRenderer {
         const folderName = document.createElement("span");
 
         folderName.classList.add("folder");
-        folderName.textContent = `📁 ${folder.name}`;
+        folderName.classList.toggle("closed-folder", !folder.open);
+        folderName.textContent = `${folder.open ? "📂" : "📁"} ${folder.name}`;
 
         folderName.onclick = () => {
             this.manager.toggleFolder(folderPath);

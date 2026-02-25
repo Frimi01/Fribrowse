@@ -1,17 +1,20 @@
-//Github (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
+//GitHub (buy me coffee on kofi): https://github.com/Frimi01/Frimi01-Projects
 import { BookmarkManager } from './core/BookmarkManager.js';
 import { exportBookmarks, importBookmarks, addRootFolder } from './core/BookmarkIO.js';
 import { BookmarkRenderer } from './ui/BookmarkRenderer.js';
 import { handleSearch, clearSearchResults } from './ui/SearchHandler.js';
 
 class BookmarkApp {
+    apiBaseUrl = "/api";
+    dataVersion = 1; // Increment this when making breaking changes that require migration
+
     constructor(containerElement) {
-        this.manager = new BookmarkManager();
+        this.manager = new BookmarkManager(this.apiBaseUrl, this.dataVersion);
         this.renderer = new BookmarkRenderer(containerElement, this.manager);
     }
 
     async initialize() {
-        await this.manager.getBookmarks();
+        await this.manager.loadBookmarks();
         this.renderer.render();
     }
 
