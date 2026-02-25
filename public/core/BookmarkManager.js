@@ -88,7 +88,7 @@ export class BookmarkManager {
 			try {
 				const current = await this.#fetchCurrentState();
 
-				if (current !== null && current.revision !== this.revision) {
+				if (current !== null && current.revision !== undefined && current.revision !== this.revision) {
 					// Server has a newer revision than what we loaded.
 					const savedAt = current.saved_at
 						? `\nLast saved: ${new Date(current.saved_at).toLocaleString()}`
@@ -238,6 +238,7 @@ export class BookmarkManager {
 			case 0:
 				this.revision = 0;
 				this.bookmarks = oldData;
+				this.saveBookmarksToServer();
 				return this.bookmarks;
 			default:
 				notification("Migration failed, manual reformatting required.", "oldVersion not identifiable.", true, true);
