@@ -26,9 +26,9 @@ If any release is outdated, you can open an issue requesting an updated build or
 # docker-compose.yaml 
 services: 
   fribrowse: 
-    image: ghcr.io/frimi01/fribrowse:latest 
+    image: frimi01/fribrowse:latest 
   ports: 
-    - "3002:3002" 
+    - "3002:3002" # Maps container ports to host ports, remove if you only need to access ports on docker network.
   volumes: 
     - ./data:/app/data 
   environment: 
@@ -40,11 +40,11 @@ services:
 # docker-compose.yaml
 services:
   fribrowse:
-    image: ghcr.io/frimi01/fribrowse:latest
+    image: frimi01/fribrowse:latest
     container_name: fribrowse-go-server
     restart: unless-stopped
     ports:
-      - "3002:3002"
+      - "3002:3002" # Maps container ports to host ports, remove if you only need to access ports on docker network.
     environment:
       STORE: couchdb
       COUCH_URL: http://couchdb:5984 # If couchdb is hosted on a different device you need to change this url, otherwise keep this.
