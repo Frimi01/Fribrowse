@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -41,17 +42,18 @@ type JSONStore struct {
 
 func (s *JSONStore) Load() ([]byte, error) {
 	data, err := os.ReadFile(s.path)
-	if os.IsNotExist(err) {
-		log.Printf("%sJSON file not found, returning empty array", logInfo)
-		return []byte("[]"), nil
-	}
 	if err != nil {
+		if os.IsNotExist(err) {
+			// Return the error so callers can distinguish "not found" from other errors.
+			log.Printf("%sJSON file not found: %s", logInfo, s.path)
+			return nil, err
+		}
 		log.Printf("%sFailed to read JSON file: %v", logError, err)
 		return nil, err
 	}
-	
+
 	log.Printf("%sLoaded %d bytes from JSON file", logDebug, len(data))
-	return data, err
+	return data, nil
 }
 
 func (s *JSONStore) Save(data []byte) error {
@@ -297,14 +299,6 @@ func main() {
 	} else {
 		store = &JSONStore{path: bookmarksFile}
 		log.Printf("%sUsing JSON file storage", logInfo)
-		
-		// Initialize empty file if it doesn't exist
-		if _, err := os.Stat(bookmarksFile); os.IsNotExist(err) {
-			if err := os.WriteFile(bookmarksFile, []byte("[]"), 0644); err != nil {
-				log.Fatalf("%sFailed to create bookmarks file: %v", logError, err)
-			}
-			log.Printf("%sCreated new bookmarks file", logInfo)
-		}
 	}
 
 	srv := startServer(store, port)
@@ -396,9 +390,17 @@ func bookmarksHandler(store BookmarkStore) http.HandlerFunc {
 
 func handleGetBookmarks(store BookmarkStore, w http.ResponseWriter, r *http.Request) {
 	log.Printf("%sGET /bookmarks", logDebug)
-	
+
 	data, err := store.Load()
 	if err != nil {
+		// Return 404 when the bookmarks file does not exist so the frontend
+		// knows to start with an empty collection rather than treating it as
+		// a successful (but empty) response.
+		if errors.Is(err, os.ErrNotExist) {
+			log.Printf("%sBookmarks not found, returning 404", logInfo)
+			http.Error(w, "Bookmarks file not found", http.StatusNotFound)
+			return
+		}
 		log.Printf("%sFailed to load bookmarks: %v", logError, err)
 		http.Error(w, "Failed to load bookmarks", http.StatusInternalServerError)
 		return
