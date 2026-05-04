@@ -7,20 +7,42 @@ export class BookmarkManager {
 
 		// JSON
 		this.version = version;
-		this.revision = 0;
+		this.revision = -1; // Prevents accidental overwrites on data initialized by 0.
 		this.bookmarks = [];
 
 		this.saving = false;
 		this.pendingSave = false;
 		this.unsynced = false;
 		this.createSyncButton();
+
+		this.authenticated = false;
+		this.onAuthRequired = null; 
 	}
 
 	async loadBookmarks(data = null) {
 		try {
 			let json;
 			if (data == null) {
-				const res = await fetch(`${this.api}/bookmarks`);
+				const res = await fetch(`${this.api}/bookmarks`, {
+					method: "GET",
+					headers: { "Content-Type": "application/json" },
+					credentials: "include"
+				});
+
+				if (res.status === 401) {
+					console.log("Authentication required");
+					this.authenticated = false;
+
+					const success = await this.handleUnauthorized();
+					if (success) {
+						return this.loadBookmarks(data);
+					}
+
+					userMessage = "Authentication required to load bookmarks.";
+					technicalDetails = "Please log in to access your bookmarks.\nStatus: 401 Unauthorized";
+					notification(userMessage, technicalDetails, true, true);
+					throw new Error("Unauthorized");
+				}
 
 				if (!res.ok) {
 					console.error("Error loading bookmarks:", res);
@@ -34,6 +56,7 @@ export class BookmarkManager {
 						notification(userMessage, technicalDetails, false, false);
 						this.revision = 0;
 						this.bookmarks = [];
+						this.authenticated = true;
 						return [];
 					} else if (res.status === 500) {
 						userMessage = "Server error while loading bookmarks.";
@@ -48,13 +71,12 @@ export class BookmarkManager {
 					return [];
 				}
 				json = await res.json();
+				this.authenticated = true;
 			} else {
 				const current = await this.#fetchCurrentState();
 				this.revision = current.revision;
 				json = data;
 			}
-
-
 
 			// Legacy: server returned a bare array before envelope format was introduced.
 			if (Array.isArray(json)) {
@@ -83,7 +105,17 @@ export class BookmarkManager {
 
 	async #fetchCurrentState() {
 		try {
-			const res = await fetch(`${this.api}/bookmarks`);
+			const res = await fetch(`${this.api}/bookmarks`, {
+				method: "GET",
+				headers: { "Content-Type": "application/json" },
+				credentials: "include"
+			});
+			
+			if (res.status === 401) {
+				this.authenticated = false;
+				return null;
+			}
+			
 			if (!res.ok) return null;
 			return await res.json();
 		} catch {
@@ -102,6 +134,21 @@ export class BookmarkManager {
 
 		while (true) {
 			try {
+				// Check if we lost authentication
+				if (!this.authenticated) {
+					const success = await this.handleUnauthorized();
+					if (!success) {
+						this.unsync();
+						notification(
+							"Authentication required to save bookmarks.",
+							"Please log in to sync your changes.",
+							true,
+							true
+						);
+						break;
+					}
+				}
+
 				const current = await this.#fetchCurrentState();
 
 				if (current !== null && current.revision !== undefined && current.revision !== this.revision) {
@@ -124,12 +171,31 @@ export class BookmarkManager {
 				const res = await fetch(`${this.api}/bookmarks`, {
 					method: "PUT",
 					headers: { "Content-Type": "application/json" },
+					credentials: "include",
 					body: JSON.stringify({
 						revision: this.revision + 1,
 						version: this.version,
 						data: this.bookmarks
 					}),
 				});
+
+				if (res.status === 401) {
+					console.log("Authentication required for save");
+					this.authenticated = false;
+					const success = await this.handleUnauthorized();
+					if (!success) {
+						this.unsync();
+						notification(
+							"Authentication required to save bookmarks.",
+							"Please log in to sync your changes.",
+							true,
+							true
+						);
+						break;
+					}
+					// Retry after successful auth
+					continue;
+				}
 
 				if (!res.ok) {
 					console.error("Failed to save bookmarks:", res);
@@ -258,6 +324,63 @@ export class BookmarkManager {
 				return this.bookmarks;
 			default:
 				notification("Migration failed, manual reformatting required.", "oldVersion not identifiable.", true, true);
+		}
+	}
+
+	async handleUnauthorized() {
+		const password = prompt("Enter password to access bookmarks:");
+
+		if (!password) {
+			console.log("User cancelled authentication");
+			return false;
+		}
+
+		try {
+			const res = await fetch(`${this.api}/login`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				credentials: "include",
+				body: JSON.stringify({ password })
+			});
+
+			if (!res.ok) {
+				alert("Login failed. Please check your password.");
+				console.error("Login failed with status:", res.status);
+				return false;
+			}
+
+			console.log("Login successful");
+			this.authenticated = true;
+			
+			// Trigger callback if set
+			if (this.onAuthRequired) {
+				this.onAuthRequired();
+			}
+			
+			return true;
+
+		} catch (err) {
+			console.error("Login error:", err);
+			alert("Login failed due to connection error.");
+			return false;
+		}
+	}
+
+	// Unused for now
+	async logout() {
+		try {
+			const res = await fetch(`${this.api}/logout`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				credentials: "include"
+			});
+
+			if (res.ok) {
+				this.authenticated = false;
+				console.log("Logged out successfully");
+			}
+		} catch (err) {
+			console.error("Logout error:", err);
 		}
 	}
 
