@@ -27,6 +27,7 @@ const (
 	maxRequestBodyMB = 10
 	maxAuthBodyBytes = 1024
 	shutdownTimeout  = 5 * time.Second
+	sessionDuration  = 30 * 24 * time.Hour
 )
 
 const (
@@ -533,6 +534,10 @@ func loginHandler() http.HandlerFunc {
 		}
 
 		expectedPassword := os.Getenv("FRIBROWSE_PASSWORD")
+		if expectedPassword == "" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		if subtle.ConstantTimeCompare([]byte(body.Password), []byte(expectedPassword)) != 1 {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -545,7 +550,7 @@ func loginHandler() http.HandlerFunc {
 			return
 		}
 		sessionsMu.Lock()
-		sessions[sessionID] = session{expires: time.Now().Add(24 * 30 * time.Hour)}
+		sessions[sessionID] = session{expires: time.Now().Add(sessionDuration)}
 		sessionsMu.Unlock()
 
 		secure := os.Getenv("FRIBROWSE_SECURE_COOKIE") == "true"
@@ -556,7 +561,7 @@ func loginHandler() http.HandlerFunc {
 			HttpOnly: true,
 			Secure:   secure,
 			SameSite: http.SameSiteLaxMode,
-			MaxAge:   60 * 60 * 24 * 30,
+			MaxAge:   int(sessionDuration / time.Second),
 		})
 
 		w.WriteHeader(http.StatusOK)
