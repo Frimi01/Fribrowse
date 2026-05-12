@@ -618,10 +618,12 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		now := time.Now()
 		sessionsMu.RLock()
 		s, ok := sessions[cookie.Value]
+		expired := ok && now.After(s.expires)
 		sessionsMu.RUnlock()
-		if !ok || time.Now().After(s.expires) {
+		if !ok || expired {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
