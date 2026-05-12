@@ -73,7 +73,7 @@ Environment variables. If none are set, the API will fall back on JSON.
 | COUCH_PASS              | Password                                                                     | `StrongPassword`                |
 | COUCH_DB                | Database name                                                                | `fribrowse`                     |
 | PORT                    | HTTP port the server listens on. Defaults to `3002`.                         | `3002`                          |
-| FRIBROWSE_PASSWORD      | Password to protect the bookmarks API. When set, a valid session is required.| `StrongPassword`                |
+| FRIBROWSE_PASSWORD      | Shared identity token to protect the bookmarks API. When set, a valid session is required.| `StrongToken`                   |
 | FRIBROWSE_SECURE_COOKIE | Set to `true` when serving over HTTPS to mark the session cookie as Secure.  | `true`                          |
 | FRIBROWSE_ORIGIN        | Allowed CORS origin for cross-origin access with credentials.                | `http://localhost:3002`         |
 
@@ -83,7 +83,7 @@ Authentication endpoints are only active when `FRIBROWSE_PASSWORD` is set.
 
 | Method | Endpoint      | Description                                                                 |
 | ------ | ------------- | --------------------------------------------------------------------------- |
-| POST   | `/api/login`  | Authenticate with `{"password": "..."}`. Sets a session cookie on success. |
+| POST   | `/api/login`  | Authenticate with `{"password": "..."}` using the configured shared token. Sets a session cookie on success. |
 | POST   | `/api/logout` | Invalidate the current session cookie.                                      |
 
 [Development Setup](development.md)

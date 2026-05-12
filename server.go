@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -15,6 +16,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -23,6 +25,7 @@ const (
 	bookmarksFile    = "./bookmarks.json"
 	backupDir        = "./backups"
 	maxRequestBodyMB = 10
+	maxAuthBodyBytes = 1024
 	shutdownTimeout  = 5 * time.Second
 )
 
@@ -45,7 +48,10 @@ type session struct {
 	expires time.Time
 }
 
-var sessions = map[string]session{}
+var (
+	sessions   = map[string]session{}
+	sessionsMu sync.RWMutex
+)
 
 func isAuthEnabled() bool {
 	return os.Getenv("FRIBROWSE_PASSWORD") != ""
@@ -486,12 +492,12 @@ func fmtError(status string, body []byte) error {
 }
 
 // Auth
-func newSessionID() string {
+func newSessionID() (string, error) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
-		panic("failed to generate session ID")
+		return "", err
 	}
-	return base64.URLEncoding.EncodeToString(b)
+	return base64.URLEncoding.EncodeToString(b), nil
 }
 
 func loginHandler() http.HandlerFunc {
@@ -503,11 +509,13 @@ func loginHandler() http.HandlerFunc {
 
 		// Clean up expired sessions
 		now := time.Now()
+		sessionsMu.Lock()
 		for k, s := range sessions {
 			if now.After(s.expires) {
 				delete(sessions, k)
 			}
 		}
+		sessionsMu.Unlock()
 
 		if r.Method != "POST" {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -518,18 +526,27 @@ func loginHandler() http.HandlerFunc {
 			Password string `json:"password"`
 		}
 
+		r.Body = http.MaxBytesReader(w, r.Body, maxAuthBodyBytes)
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			http.Error(w, "Invalid request", http.StatusBadRequest)
 			return
 		}
 
-		if body.Password != os.Getenv("FRIBROWSE_PASSWORD") {
+		expectedPassword := os.Getenv("FRIBROWSE_PASSWORD")
+		if subtle.ConstantTimeCompare([]byte(body.Password), []byte(expectedPassword)) != 1 {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		sessionID := newSessionID()
+		sessionID, err := newSessionID()
+		if err != nil {
+			log.Printf("%sFailed to generate session ID: %v", logError, err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		sessionsMu.Lock()
 		sessions[sessionID] = session{expires: time.Now().Add(24 * 30 * time.Hour)}
+		sessionsMu.Unlock()
 
 		secure := os.Getenv("FRIBROWSE_SECURE_COOKIE") == "true"
 		http.SetCookie(w, &http.Cookie{
@@ -553,9 +570,16 @@ func logoutHandler() http.HandlerFunc {
 			return
 		}
 
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		cookie, err := r.Cookie("session")
 		if err == nil {
+			sessionsMu.Lock()
 			delete(sessions, cookie.Value)
+			sessionsMu.Unlock()
 		}
 
 		secure := os.Getenv("FRIBROWSE_SECURE_COOKIE") == "true"
@@ -586,7 +610,9 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		sessionsMu.RLock()
 		s, ok := sessions[cookie.Value]
+		sessionsMu.RUnlock()
 		if !ok || time.Now().After(s.expires) {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
