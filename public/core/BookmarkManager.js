@@ -38,8 +38,8 @@ export class BookmarkManager {
 						return this.loadBookmarks(data);
 					}
 
-					userMessage = "Authentication required to load bookmarks.";
-					technicalDetails = "Please log in to access your bookmarks.\nStatus: 401 Unauthorized";
+					const userMessage = "Authentication required to load bookmarks.";
+					const technicalDetails = "Please log in to access your bookmarks.\nStatus: 401 Unauthorized";
 					notification(userMessage, technicalDetails, true, true);
 					throw new Error("Unauthorized");
 				}
