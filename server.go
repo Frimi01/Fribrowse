@@ -56,7 +56,7 @@ var (
 )
 
 func isAuthEnabled() bool {
-	return os.Getenv("FRIBROWSE_PASSWORD") != ""
+	return os.Getenv("FRIBROWSE_TOKEN") != ""
 }
 
 func (s *JSONStore) Load() ([]byte, error) {
@@ -515,7 +515,7 @@ func loginHandler() http.HandlerFunc {
 		}
 
 		var body struct {
-			Password string `json:"password"`
+			Token string `json:"token"`
 		}
 
 		r.Body = http.MaxBytesReader(w, r.Body, maxAuthBodyBytes)
@@ -529,13 +529,13 @@ func loginHandler() http.HandlerFunc {
 			return
 		}
 
-		expectedPassword := os.Getenv("FRIBROWSE_PASSWORD")
-		if expectedPassword == "" {
+		expectedToken := os.Getenv("FRIBROWSE_TOKEN")
+		if expectedToken == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		if subtle.ConstantTimeCompare([]byte(body.Password), []byte(expectedPassword)) != 1 {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		if subtle.ConstantTimeCompare([]byte(body.Token), []byte(expectedToken)) != 1 {
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 

@@ -339,9 +339,9 @@ export class BookmarkManager {
 	}
 
 	async handleUnauthorized() {
-		const password = prompt("Enter password to access bookmarks:");
+		const token = prompt("Enter access token to access bookmarks:");
 
-		if (!password) {
+		if (!token) {
 			console.log("User cancelled authentication");
 			return false;
 		}
@@ -351,11 +351,11 @@ export class BookmarkManager {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				credentials: "include",
-				body: JSON.stringify({ password })
+				body: JSON.stringify({ token })
 			});
 
 			if (!res.ok) {
-				alert("Login failed. Please check your password.");
+				alert("Login failed. Please check your access token.");
 				console.error("Login failed with status:", res.status);
 				return false;
 			}

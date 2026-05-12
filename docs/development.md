@@ -24,7 +24,7 @@ services:
       # This is simply an additional layer of security to prevent exposure of data.
       # You can remove the two variables below if you know what you're doing.
       FRIBROWSE_SECURE_COOKIE: "false" # Set to "true" if using HTTPS
-      FRIBROWSE_PASSWORD: "password123" # Change this
+      FRIBROWSE_TOKEN: "token123" # Change this
 
       # Storage mode:
       # - couchdb

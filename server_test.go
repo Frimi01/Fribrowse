@@ -110,7 +110,7 @@ func TestJSONStore_Load_FileExists(t *testing.T) {
 }
 
 func TestLogoutHandler_MethodNotAllowed(t *testing.T) {
-	t.Setenv("FRIBROWSE_PASSWORD", "token")
+	t.Setenv("FRIBROWSE_TOKEN", "token")
 
 	req := httptest.NewRequest(http.MethodGet, "/api/logout", nil)
 	rr := httptest.NewRecorder()
@@ -123,10 +123,10 @@ func TestLogoutHandler_MethodNotAllowed(t *testing.T) {
 }
 
 func TestLoginAndLogoutFlow(t *testing.T) {
-	t.Setenv("FRIBROWSE_PASSWORD", "token")
+	t.Setenv("FRIBROWSE_TOKEN", "token")
 	resetSessions(t)
 
-	loginReq := httptest.NewRequest(http.MethodPost, "/api/login", strings.NewReader(`{"password":"token"}`))
+	loginReq := httptest.NewRequest(http.MethodPost, "/api/login", strings.NewReader(`{"token":"token"}`))
 	loginRR := httptest.NewRecorder()
 	loginHandler().ServeHTTP(loginRR, loginReq)
 
@@ -169,7 +169,7 @@ func TestLoginAndLogoutFlow(t *testing.T) {
 }
 
 func TestAuthMiddleware_UnauthorizedWithExpiredSession(t *testing.T) {
-	t.Setenv("FRIBROWSE_PASSWORD", "token")
+	t.Setenv("FRIBROWSE_TOKEN", "token")
 	resetSessions(t)
 
 	sessionID := "expired-session"

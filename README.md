@@ -33,8 +33,8 @@ services:
     - ./data:/app/data 
   environment: 
     - STORE=json 
-    # Optional: password-protect the bookmarks API
-    - FRIBROWSE_PASSWORD=StrongPassword # CHANGE or remove to disable auth
+    # Optional: token-protect the bookmarks API
+    - FRIBROWSE_TOKEN=StrongToken # CHANGE or remove to disable auth
     - FRIBROWSE_SECURE_COOKIE=false # Set to true if using HTTPS
     - FRIBROWSE_ORIGIN=http://localhost:3002 # Restrict CORS to this origin
 ```
@@ -55,8 +55,8 @@ services:
       COUCH_USER: Username # CHANGE
       COUCH_PASS: StrongPassword # CHANGE
       COUCH_DB: fribrowse # Can be changed
-      # Optional: password-protect the bookmarks API
-      FRIBROWSE_PASSWORD: StrongPassword # CHANGE or remove to disable auth
+      # Optional: token-protect the bookmarks API
+      FRIBROWSE_TOKEN: StrongToken # CHANGE or remove to disable auth
       FRIBROWSE_SECURE_COOKIE: "false" # Set to "true" if using HTTPS
       FRIBROWSE_ORIGIN: http://localhost:3002 # Restrict CORS to this origin
 ```
@@ -73,17 +73,17 @@ Environment variables. If none are set, the API will fall back on JSON.
 | COUCH_PASS              | Password                                                                     | `StrongPassword`                |
 | COUCH_DB                | Database name                                                                | `fribrowse`                     |
 | PORT                    | HTTP port the server listens on. Defaults to `3002`.                         | `3002`                          |
-| FRIBROWSE_PASSWORD      | Shared access token (submitted in the `password` field) to protect the bookmarks API. When set, a valid session is required.| `StrongToken`                   |
+| FRIBROWSE_TOKEN         | Shared access token for bookmark API; basic password-style protection, not fully secure. | `StrongToken`                   |
 | FRIBROWSE_SECURE_COOKIE | Set to `true` when serving over HTTPS to mark the session cookie as Secure.  | `true`                          |
 | FRIBROWSE_ORIGIN        | Allowed CORS origin for cross-origin access with credentials.                | `http://localhost:3002`         |
 
 ### API Endpoints
 
-Authentication endpoints are only active when `FRIBROWSE_PASSWORD` is set.
+Authentication endpoints are only active when `FRIBROWSE_TOKEN` is set.
 
 | Method | Endpoint      | Description                                                                 |
 | ------ | ------------- | --------------------------------------------------------------------------- |
-| POST   | `/api/login`  | Authenticate with `{"password": "..."}` using the configured shared token. Sets a session cookie on success. |
+| POST   | `/api/login`  | Authenticate with `{"token": "..."}` using the configured shared token. Sets a session cookie on success. |
 | POST   | `/api/logout` | Invalidate the current session cookie.                                      |
 
 [Development Setup](development.md)
