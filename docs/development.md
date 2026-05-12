@@ -18,7 +18,7 @@ services:
     ports:
       - "3002:3002"
     environment:
-      FRIBROWSE_ORIGIN: http://localhost
+      FRIBROWSE_ORIGIN: http://localhost:3002
 
       # For production, you should deploy behind a reverse proxy or service that handles authentication properly.
       # This is simply an additional layer of security to prevent exposure of data.
