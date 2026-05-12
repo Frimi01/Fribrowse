@@ -74,7 +74,18 @@ export class BookmarkManager {
 				this.authenticated = true;
 			} else {
 				const current = await this.#fetchCurrentState();
-				this.revision = current.revision;
+				if (current == null) {
+					this.authenticated = false;
+					this.revision = 0;
+					notification(
+						"Importing bookmarks without current sync state.",
+						"Could not fetch the current bookmark revision because authentication is required or the server state is unavailable. The imported bookmarks were loaded locally with revision 0. Log in before syncing to avoid overwriting server data.",
+						true,
+						true
+					);
+				} else {
+					this.revision = current.revision ?? 0;
+				}
 				json = data;
 			}
 
