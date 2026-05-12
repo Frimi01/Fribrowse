@@ -126,7 +126,11 @@ func TestLoginAndLogoutFlow(t *testing.T) {
 	}
 
 	loginResp := loginRR.Result()
-	loginCookie := loginResp.Cookies()[0]
+	cookies := loginResp.Cookies()
+	if len(cookies) == 0 {
+		t.Fatalf("expected at least one cookie in login response")
+	}
+	loginCookie := cookies[0]
 	if loginCookie.Name != "session" || loginCookie.Value == "" {
 		t.Fatalf("expected non-empty session cookie, got %q=%q", loginCookie.Name, loginCookie.Value)
 	}
