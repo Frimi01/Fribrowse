@@ -10,6 +10,18 @@ import (
 	"time"
 )
 
+func resetSessions(t *testing.T) {
+	t.Helper()
+	sessionsMu.Lock()
+	sessions = map[string]session{}
+	sessionsMu.Unlock()
+	t.Cleanup(func() {
+		sessionsMu.Lock()
+		sessions = map[string]session{}
+		sessionsMu.Unlock()
+	})
+}
+
 // TestGetBookmarks_FileNotFound verifies that GET /api/bookmarks returns 404
 // when the bookmarks.json file does not exist.
 func TestGetBookmarks_FileNotFound(t *testing.T) {
@@ -112,10 +124,7 @@ func TestLogoutHandler_MethodNotAllowed(t *testing.T) {
 
 func TestLoginAndLogoutFlow(t *testing.T) {
 	t.Setenv("FRIBROWSE_PASSWORD", "token")
-
-	sessionsMu.Lock()
-	sessions = map[string]session{}
-	sessionsMu.Unlock()
+	resetSessions(t)
 
 	loginReq := httptest.NewRequest(http.MethodPost, "/api/login", strings.NewReader(`{"password":"token"}`))
 	loginRR := httptest.NewRecorder()
@@ -161,6 +170,7 @@ func TestLoginAndLogoutFlow(t *testing.T) {
 
 func TestAuthMiddleware_UnauthorizedWithExpiredSession(t *testing.T) {
 	t.Setenv("FRIBROWSE_PASSWORD", "token")
+	resetSessions(t)
 
 	sessionID := "expired-session"
 	sessionsMu.Lock()

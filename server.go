@@ -509,16 +509,6 @@ func loginHandler() http.HandlerFunc {
 			return
 		}
 
-		// Clean up expired sessions
-		now := time.Now()
-		sessionsMu.Lock()
-		for k, s := range sessions {
-			if now.After(s.expires) {
-				delete(sessions, k)
-			}
-		}
-		sessionsMu.Unlock()
-
 		if r.Method != "POST" {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -540,6 +530,10 @@ func loginHandler() http.HandlerFunc {
 		}
 
 		expectedPassword := os.Getenv("FRIBROWSE_PASSWORD")
+		if expectedPassword == "" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 		if subtle.ConstantTimeCompare([]byte(body.Password), []byte(expectedPassword)) != 1 {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -551,8 +545,15 @@ func loginHandler() http.HandlerFunc {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
+
+		now := time.Now()
 		sessionsMu.Lock()
-		sessions[sessionID] = session{expires: time.Now().Add(sessionDuration)}
+		for k, s := range sessions {
+			if now.After(s.expires) {
+				delete(sessions, k)
+			}
+		}
+		sessions[sessionID] = session{expires: now.Add(sessionDuration)}
 		sessionsMu.Unlock()
 
 		secure := os.Getenv("FRIBROWSE_SECURE_COOKIE") == "true"
