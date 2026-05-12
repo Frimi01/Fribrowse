@@ -28,6 +28,7 @@ const (
 	maxAuthBodyBytes = 1024
 	shutdownTimeout  = 5 * time.Second
 	sessionDuration  = 30 * 24 * time.Hour
+	sessionMaxAge    = int(sessionDuration / time.Second)
 )
 
 const (
@@ -529,15 +530,16 @@ func loginHandler() http.HandlerFunc {
 
 		r.Body = http.MaxBytesReader(w, r.Body, maxAuthBodyBytes)
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			var maxBytesErr *http.MaxBytesError
+			if errors.As(err, &maxBytesErr) {
+				http.Error(w, "Request body too large", http.StatusRequestEntityTooLarge)
+				return
+			}
 			http.Error(w, "Invalid request", http.StatusBadRequest)
 			return
 		}
 
 		expectedPassword := os.Getenv("FRIBROWSE_PASSWORD")
-		if expectedPassword == "" {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
 		if subtle.ConstantTimeCompare([]byte(body.Password), []byte(expectedPassword)) != 1 {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -561,7 +563,7 @@ func loginHandler() http.HandlerFunc {
 			HttpOnly: true,
 			Secure:   secure,
 			SameSite: http.SameSiteLaxMode,
-			MaxAge:   int(sessionDuration / time.Second),
+			MaxAge:   sessionMaxAge,
 		})
 
 		w.WriteHeader(http.StatusOK)
