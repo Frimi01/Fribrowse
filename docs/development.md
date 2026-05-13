@@ -18,6 +18,14 @@ services:
     ports:
       - "3002:3002"
     environment:
+      FRIBROWSE_ORIGIN: http://localhost:3002
+
+      # For production, you should deploy behind a reverse proxy or service that handles authentication properly.
+      # This is simply an additional layer of security to prevent exposure of data.
+      # You can remove the two variables below if you know what you're doing.
+      FRIBROWSE_SECURE_COOKIE: "false" # Set to "true" if using HTTPS
+      FRIBROWSE_TOKEN: "token123" # Change this
+
       # Storage mode:
       # - couchdb
       # - json (stores bookmarks in a local JSON file, no database required)
@@ -73,4 +81,5 @@ services:
 #################Volumes#####################################
 volumes:
   couchdb-data:
+
 ```

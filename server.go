@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -14,15 +16,19 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
 const (
-	defaultPort       = "3002"
-	bookmarksFile     = "./bookmarks.json"
-	backupDir         = "./backups"
-	maxRequestBodyMB  = 10
-	shutdownTimeout   = 5 * time.Second
+	defaultPort      = "3002"
+	bookmarksFile    = "./bookmarks.json"
+	backupDir        = "./backups"
+	maxRequestBodyMB = 10
+	maxAuthBodyBytes = 1024
+	shutdownTimeout  = 5 * time.Second
+	sessionDuration  = 30 * 24 * time.Hour
+	sessionMaxAge    = int(sessionDuration / time.Second)
 )
 
 const (
@@ -38,6 +44,19 @@ type BookmarkStore interface {
 
 type JSONStore struct {
 	path string
+}
+
+type session struct {
+	expires time.Time
+}
+
+var (
+	sessions   = map[string]session{}
+	sessionsMu sync.RWMutex
+)
+
+func isAuthEnabled() bool {
+	return os.Getenv("FRIBROWSE_TOKEN") != ""
 }
 
 func (s *JSONStore) Load() ([]byte, error) {
@@ -56,13 +75,14 @@ func (s *JSONStore) Load() ([]byte, error) {
 	return data, nil
 }
 
+// TODO: OS respective atomic save
 func (s *JSONStore) Save(data []byte) error {
 	err := os.WriteFile(s.path, data, 0644)
 	if err != nil {
 		log.Printf("%sFailed to write JSON file: %v", logError, err)
 		return err
 	}
-	
+
 	log.Printf("%sSaved %d bytes to JSON file", logInfo, len(data))
 	return nil
 }
@@ -259,12 +279,12 @@ func (c *CouchStore) ensureDatabase() error {
 		log.Printf("%sCreated CouchDB database: %s", logInfo, c.dbName)
 		return nil
 	}
-	
+
 	if res.StatusCode == http.StatusPreconditionFailed {
 		log.Printf("%sCouchDB database already exists: %s", logInfo, c.dbName)
 		return nil
 	}
-	
+
 	body, _ := io.ReadAll(res.Body)
 	log.Printf("%sFailed to create database - Status: %d, Error: %s", logError, res.StatusCode, strings.TrimSpace(string(body)))
 	return fmtError(res.Status, body)
@@ -288,13 +308,13 @@ func main() {
 			os.Getenv("COUCH_PASS"),
 			os.Getenv("COUCH_DB"),
 		)
-		
+
 		log.Printf("%sUsing CouchDB storage", logInfo)
 		log.Printf("%sEnsuring database exists...", logInfo)
 		if err := couchStore.ensureDatabase(); err != nil {
 			log.Fatalf("%sFailed to ensure CouchDB database exists: %v", logError, err)
 		}
-		
+
 		store = couchStore
 	} else {
 		store = &JSONStore{path: bookmarksFile}
@@ -309,7 +329,7 @@ func main() {
 	<-stop
 
 	log.Printf("%sShutdown signal received, shutting down gracefully...", logInfo)
-	
+
 	// Create backup before shutdown
 	if os.Getenv("STORE") != "couchdb" {
 		backupJSON("lastServerShutdown")
@@ -318,36 +338,29 @@ func main() {
 	// Graceful shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
-	
+
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("%sServer shutdown error: %v", logError, err)
 	}
-	
+
 	log.Printf("%sServer stopped", logInfo)
 }
 
 func startServer(store BookmarkStore, port string) *http.Server {
 	mux := http.NewServeMux()
 
-	// Add CORS middleware for local development
-	corsMiddleware := func(next http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-			
-			if r.Method == "OPTIONS" {
-				w.WriteHeader(http.StatusOK)
-				return
-			}
-			
-			next(w, r)
-		}
-	}
-
 	mux.Handle("/", http.FileServer(http.Dir("./public")))
-	mux.HandleFunc("/api/bookmarks", corsMiddleware(bookmarksHandler(store)))
-	mux.HandleFunc("/api/health", healthCheckHandler())
+
+	// Auth routes
+	mux.HandleFunc("/api/login", corsMiddleware(loginHandler()))
+	mux.HandleFunc("/api/logout", corsMiddleware(logoutHandler()))
+
+	// Protected routes
+	mux.HandleFunc("/api/bookmarks",
+		corsMiddleware(authMiddleware(bookmarksHandler(store))),
+	)
+
+	mux.HandleFunc("/api/health", corsMiddleware(healthCheckHandler()))
 
 	srv := &http.Server{
 		Addr:    port,
@@ -355,7 +368,7 @@ func startServer(store BookmarkStore, port string) *http.Server {
 	}
 
 	go func() {
-		log.Printf("%sServer running on http://localhost%s", logInfo, port)
+		log.Printf("%sServer running on port %s", logInfo, port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("%sServer failed to start: %v", logError, err)
 		}
@@ -413,10 +426,10 @@ func handleGetBookmarks(store BookmarkStore, w http.ResponseWriter, r *http.Requ
 
 func handleSaveBookmarks(store BookmarkStore, w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s%s /bookmarks", logDebug, r.Method)
-	
+
 	// Limit request body size
 	r.Body = http.MaxBytesReader(w, r.Body, maxRequestBodyMB*1024*1024)
-	
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("%sFailed to read request body: %v", logError, err)
@@ -478,4 +491,163 @@ func backupJSON(label string) {
 
 func fmtError(status string, body []byte) error {
 	return fmt.Errorf("http error %s: %s", status, string(body))
+}
+
+// Auth
+func newSessionID() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+func loginHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !isAuthEnabled() {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		var body struct {
+			Token string `json:"token"`
+		}
+
+		r.Body = http.MaxBytesReader(w, r.Body, maxAuthBodyBytes)
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			var maxBytesErr *http.MaxBytesError
+			if errors.As(err, &maxBytesErr) {
+				http.Error(w, "Request body too large", http.StatusRequestEntityTooLarge)
+				return
+			}
+			http.Error(w, "Invalid request", http.StatusBadRequest)
+			return
+		}
+
+		expectedToken := os.Getenv("FRIBROWSE_TOKEN")
+		if expectedToken == "" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		if subtle.ConstantTimeCompare([]byte(body.Token), []byte(expectedToken)) != 1 {
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		sessionID, err := newSessionID()
+		if err != nil {
+			log.Printf("%sFailed to generate session ID: %v", logError, err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		now := time.Now()
+		sessionsMu.Lock()
+		for k, s := range sessions {
+			if now.After(s.expires) {
+				delete(sessions, k)
+			}
+		}
+		sessions[sessionID] = session{expires: now.Add(sessionDuration)}
+		sessionsMu.Unlock()
+
+		secure := os.Getenv("FRIBROWSE_SECURE_COOKIE") == "true"
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    sessionID,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   secure,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   sessionMaxAge,
+		})
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func logoutHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !isAuthEnabled() {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		cookie, err := r.Cookie("session")
+		if err == nil {
+			sessionsMu.Lock()
+			delete(sessions, cookie.Value)
+			sessionsMu.Unlock()
+		}
+
+		secure := os.Getenv("FRIBROWSE_SECURE_COOKIE") == "true"
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   secure,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   -1, // delete immediately
+		})
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !isAuthEnabled() {
+			next(w, r)
+			return
+		}
+
+		cookie, err := r.Cookie("session")
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		now := time.Now()
+		sessionsMu.RLock()
+		s, ok := sessions[cookie.Value]
+		if !ok || now.After(s.expires) {
+			sessionsMu.RUnlock()
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		sessionsMu.RUnlock()
+
+		next(w, r)
+	}
+}
+
+func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		origin := os.Getenv("FRIBROWSE_ORIGIN")
+
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		}
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next(w, r)
+	}
 }

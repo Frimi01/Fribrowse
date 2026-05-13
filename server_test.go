@@ -7,7 +7,20 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
+
+func resetSessions(t *testing.T) {
+	t.Helper()
+	sessionsMu.Lock()
+	sessions = map[string]session{}
+	sessionsMu.Unlock()
+	t.Cleanup(func() {
+		sessionsMu.Lock()
+		sessions = map[string]session{}
+		sessionsMu.Unlock()
+	})
+}
 
 // TestGetBookmarks_FileNotFound verifies that GET /api/bookmarks returns 404
 // when the bookmarks.json file does not exist.
@@ -93,5 +106,88 @@ func TestJSONStore_Load_FileExists(t *testing.T) {
 	}
 	if string(data) != content {
 		t.Errorf("expected %q, got %q", content, string(data))
+	}
+}
+
+func TestLogoutHandler_MethodNotAllowed(t *testing.T) {
+	t.Setenv("FRIBROWSE_TOKEN", "token")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/logout", nil)
+	rr := httptest.NewRecorder()
+
+	logoutHandler().ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected status %d, got %d", http.StatusMethodNotAllowed, rr.Code)
+	}
+}
+
+func TestLoginAndLogoutFlow(t *testing.T) {
+	t.Setenv("FRIBROWSE_TOKEN", "token")
+	resetSessions(t)
+
+	loginReq := httptest.NewRequest(http.MethodPost, "/api/login", strings.NewReader(`{"token":"token"}`))
+	loginRR := httptest.NewRecorder()
+	loginHandler().ServeHTTP(loginRR, loginReq)
+
+	if loginRR.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, loginRR.Code)
+	}
+
+	loginResp := loginRR.Result()
+	cookies := loginResp.Cookies()
+	if len(cookies) == 0 {
+		t.Fatalf("expected at least one cookie in login response")
+	}
+	loginCookie := cookies[0]
+	if loginCookie.Name != "session" || loginCookie.Value == "" {
+		t.Fatalf("expected non-empty session cookie, got %q=%q", loginCookie.Name, loginCookie.Value)
+	}
+
+	sessionsMu.RLock()
+	_, ok := sessions[loginCookie.Value]
+	sessionsMu.RUnlock()
+	if !ok {
+		t.Fatalf("expected session to be stored after login")
+	}
+
+	logoutReq := httptest.NewRequest(http.MethodPost, "/api/logout", nil)
+	logoutReq.AddCookie(loginCookie)
+	logoutRR := httptest.NewRecorder()
+	logoutHandler().ServeHTTP(logoutRR, logoutReq)
+
+	if logoutRR.Code != http.StatusNoContent {
+		t.Fatalf("expected status %d, got %d", http.StatusNoContent, logoutRR.Code)
+	}
+
+	sessionsMu.RLock()
+	_, ok = sessions[loginCookie.Value]
+	sessionsMu.RUnlock()
+	if ok {
+		t.Fatalf("expected session to be deleted after logout")
+	}
+}
+
+func TestAuthMiddleware_UnauthorizedWithExpiredSession(t *testing.T) {
+	t.Setenv("FRIBROWSE_TOKEN", "token")
+	resetSessions(t)
+
+	sessionID := "expired-session"
+	sessionsMu.Lock()
+	sessions = map[string]session{
+		sessionID: {expires: time.Now().Add(-time.Hour)},
+	}
+	sessionsMu.Unlock()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/bookmarks", nil)
+	req.AddCookie(&http.Cookie{Name: "session", Value: sessionID})
+	rr := httptest.NewRecorder()
+
+	authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}).ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, rr.Code)
 	}
 }
