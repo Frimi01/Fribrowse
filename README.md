@@ -63,7 +63,16 @@ services:
 
 ## Documentation
 
-Environment variables. If none are set, the API will fall back on JSON.
+Environment variables. 
+
+> [!Tip]
+> If STORE isn't set, the API will fall back on JSON.
+
+> [!Tip]
+> FRIBROWSE_TOKEN works like a password. If not set it will disable authentication.
+
+> [!Warning]
+> It's not reccomended to change PORT when deploying with docker.
 
 | Variable                | Description                                                                  | Example                         |
 | ----------------------- | ---------------------------------------------------------------------------- | ------------------------------- |
